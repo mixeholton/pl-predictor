@@ -1,0 +1,32 @@
+{
+ "about": "Oddset odds and match links, read by hand on danskespil.dk when the user asked. A snapshot: prices change and nothing updates this file automatically (Danske Spil's terms forbid robots). Corners markets ('Hjørne' tab) only open on match day; Oddset has no 'which team gets more shots on target' market.",
+ "checked_at": "2026-11-22T16:20:00Z",
+ "competition_url": "https://danskespil.dk/oddset/sports/competition/14853/fodbold/england/england-premier-league/matches",
+ "events": {
+  "Liverpool|Man United": {"url": "https://danskespil.dk/oddset/sports/event/10429649/fodbold/england/england-premier-league/liverpool-manchester-united",
+    "checked_at": "2026-11-22T16:27:00Z", "corners": {"1": 1.54, "X": 7.50, "2": 3.05}},
+  "Brentford|Everton": {"url": "https://danskespil.dk/oddset/sports/event/10429666/fodbold/england/england-premier-league/brentford-everton"},
+  "Nott'm Forest|Chelsea": {"url": "https://danskespil.dk/oddset/sports/event/10458308/fodbold/england/england-premier-league/nottingham-forest-chelsea"},
+  "Man United|Brentford": {"url": "https://danskespil.dk/oddset/sports/event/10458305/fodbold/england/england-premier-league/manchester-united-brentford"},
+  "Leeds|Coventry": {"url": "https://danskespil.dk/oddset/sports/event/10458314/fodbold/england/england-premier-league/leeds-coventry",
+    "checked_at": "2026-11-22T16:12:00Z", "result": {"1": 1.55, "X": 4.25, "2": 5.75}, "dc": {"1X": 1.12, "X2": 2.30, "12": 1.20}},
+  "Ipswich|Aston Villa": {"url": "https://danskespil.dk/oddset/sports/event/10458299/fodbold/england/england-premier-league/ipswich-aston-villa"},
+  "Everton|Liverpool": {"url": "https://danskespil.dk/oddset/sports/event/10458309/fodbold/england/england-premier-league/everton-liverpool"},
+  "Fulham|Bournemouth": {"url": "https://danskespil.dk/oddset/sports/event/10458298/fodbold/england/england-premier-league/fulham-bournemouth"},
+  "Sunderland|Tottenham": {"url": "https://danskespil.dk/oddset/sports/event/10458304/fodbold/england/england-premier-league/sunderland-tottenham"},
+  "Brighton|Newcastle": {"url": "https://danskespil.dk/oddset/sports/event/10458301/fodbold/england/england-premier-league/brighton-newcastle",
+    "checked_at": "2026-11-22T16:22:00Z", "result": {"1": 1.58, "X": 4.25, "2": 5.00}},
+  "Crystal Palace|Hull": {"url": "https://danskespil.dk/oddset/sports/event/10458300/fodbold/england/england-premier-league/crystal-palace-hull"},
+  "Arsenal|Man City": {"url": "https://danskespil.dk/oddset/sports/event/10458303/fodbold/england/england-premier-league/arsenal-manchester-city"},
+  "Coventry|Ipswich": {"url": "https://danskespil.dk/oddset/sports/event/10505264/fodbold/england/england-premier-league/coventry-ipswich"},
+  "Hull|Nott'm Forest": {"url": "https://danskespil.dk/oddset/sports/event/10505251/fodbold/england/england-premier-league/hull-nottingham-forest"},
+  "Liverpool|Sunderland": {"url": "https://danskespil.dk/oddset/sports/event/10505252/fodbold/england/england-premier-league/liverpool-sunderland"},
+  "Chelsea|Crystal Palace": {"url": "https://danskespil.dk/oddset/sports/event/10505248/fodbold/england/england-premier-league/chelsea-crystal-palace"},
+  "Man City|Leeds": {"url": "https://danskespil.dk/oddset/sports/event/10505247/fodbold/england/england-premier-league/manchester-city-leeds"},
+  "Brentford|Arsenal": {"url": "https://danskespil.dk/oddset/sports/event/10505394/fodbold/england/england-premier-league/brentford-arsenal"},
+  "Newcastle|Man United": {"url": "https://danskespil.dk/oddset/sports/event/10505254/fodbold/england/england-premier-league/newcastle-manchester-united"},
+  "Bournemouth|Brighton": {"url": "https://danskespil.dk/oddset/sports/event/10505253/fodbold/england/england-premier-league/bournemouth-brighton"},
+  "Aston Villa|Everton": {"url": "https://danskespil.dk/oddset/sports/event/10505249/fodbold/england/england-premier-league/aston-villa-everton"},
+  "Tottenham|Fulham": {"url": "https://danskespil.dk/oddset/sports/event/10505250/fodbold/england/england-premier-league/tottenham-fulham"}
+ }
+}

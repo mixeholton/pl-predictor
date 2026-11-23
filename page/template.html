@@ -1,0 +1,1686 @@
+<title>Premier League Predictor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: matchday coupon. One column of fixture rows (1 · X · 2 bar + our call), each opening into an evidence sheet. */
+:root {
+  --bg: #eef2ef;
+  --surface: #ffffff;
+  --sunk: #f6f8f6;
+  --ink: #13201a;
+  --muted: #5a6b62;
+  --line: #d6dfd9;
+  --accent: #0b6e4f;
+  --home: #0b6e4f;
+  --draw: #9aa6a0;
+  --away: #2f5ea8;
+  --good: #1d8a43;
+  --bad: #c0392b;
+  --warn: #a86b12;
+  --chip: #e3ebe6;
+  --font-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1411; --surface: #141e19; --sunk: #101814; --ink: #e4ece7; --muted: #92a39a; --line: #25332c;
+    --accent: #43c08d; --home: #43c08d; --draw: #6f7d76; --away: #74a0ec; --good: #4cc274; --bad: #ef6b5e;
+    --warn: #e0a64a; --chip: #1d2a23; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1411; --surface: #141e19; --sunk: #101814; --ink: #e4ece7; --muted: #92a39a; --line: #25332c;
+  --accent: #43c08d; --home: #43c08d; --draw: #6f7d76; --away: #74a0ec; --good: #4cc274; --bad: #ef6b5e;
+  --warn: #e0a64a; --chip: #1d2a23; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 48px;
+}
+.wrap { max-width: 1080px; margin: 0 auto; }
+a { color: var(--accent); }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 700; letter-spacing: .01em; text-wrap: balance; margin: 0; }
+.num, td, .tab { font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+/* header */
+header.top { padding-block: 28px 8px; display: grid; gap: 10px; }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+header.top h1 { font-size: clamp(34px, 6vw, 54px); line-height: .95; text-transform: uppercase; }
+header.top h1 span { color: var(--accent); }
+.asof { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--muted); }
+.asof b { color: var(--ink); font-weight: 600; }
+.note { font-size: 13px; color: var(--muted); max-width: 70ch; }
+
+nav.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: flex; gap: 4px; padding-block: 10px; border-bottom: 1px solid var(--line); overflow-x: auto; margin-bottom: 18px; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+nav.tabs a { font-family: var(--font-display); font-size: 18px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); text-decoration: none; padding: 4px 12px; border-radius: 6px; white-space: nowrap; }
+nav.tabs a[aria-current="page"] { color: var(--surface); background: var(--ink); }
+
+/* gameweek groups */
+.gw-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 26px 0 10px; }
+.gw-head h2 { font-size: 28px; text-transform: uppercase; }
+.gw-head .sub { color: var(--muted); font-size: 13px; }
+.day { font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 14px 0 6px; }
+
+/* fixture row */
+details.fx { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); margin-bottom: 8px; }
+details.fx[open] { border-color: color-mix(in oklab, var(--accent) 45%, var(--line)); }
+details.fx > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 56px minmax(0, 1fr) 150px 20px; align-items: center; gap: 14px; padding: 12px 14px; }
+details.fx > summary::-webkit-details-marker { display: none; }
+.ko { font-family: var(--font-display); font-size: 20px; font-weight: 600; line-height: 1; }
+.ko small { display: block; font-family: var(--font-body); font-size: 11px; color: var(--muted); font-weight: 500; margin-top: 3px; }
+.match { min-width: 0; display: grid; gap: 7px; }
+.teams { display: flex; justify-content: space-between; gap: 10px; font-weight: 600; font-size: 15px; }
+.teams span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.teams .aw { text-align: right; }
+.bar { display: flex; height: 22px; border-radius: 5px; overflow: hidden; font-size: 12px; font-weight: 600; color: #fff; }
+.bar > div { display: flex; align-items: center; justify-content: center; min-width: 0; white-space: nowrap; overflow: hidden; }
+.bar .h { background: var(--home); } .bar .d { background: var(--draw); } .bar .a { background: var(--away); }
+.bar.thin { height: 8px; }
+.legend { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+.call { text-align: center; display: grid; gap: 3px; justify-items: center; }
+.call .score { font-family: var(--font-display); font-size: 34px; font-weight: 700; line-height: .9; letter-spacing: .02em; white-space: nowrap; }
+.call .lbl { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
+.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--chip); color: var(--ink); white-space: nowrap; }
+.conf-High { background: color-mix(in oklab, var(--good) 22%, var(--surface)); }
+.conf-Medium { background: color-mix(in oklab, var(--warn) 20%, var(--surface)); }
+.conf-Low { background: color-mix(in oklab, var(--bad) 16%, var(--surface)); }
+.chev { color: var(--muted); transition: transform .15s; font-size: 14px; }
+details[open] .chev { transform: rotate(90deg); }
+.played .call .score { color: var(--muted); }
+
+/* evidence sheet */
+.sheet { border-top: 1px solid var(--line); padding: 16px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; background: var(--sunk); border-radius: 0 0 var(--r) var(--r); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px; min-width: 0; }
+.panel.wide { grid-column: 1 / -1; }
+.panel h3 { font-size: 17px; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; color: var(--muted); }
+.verdict { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.picks { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.pick { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; min-width: 120px; }
+.pick .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+.pick .v { font-family: var(--font-display); font-size: 24px; font-weight: 700; line-height: 1.1; }
+.pick .p { font-size: 12px; color: var(--muted); }
+.pick.main { border-color: var(--accent); }
+.small { font-size: 12.5px; color: var(--muted); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+td { padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+.scroll { overflow-x: auto; }
+.r { text-align: right; }
+.pos { color: var(--good); } .neg { color: var(--bad); }
+.wf { display: grid; grid-template-columns: minmax(0, 1fr) 60px; gap: 3px 10px; font-size: 13px; }
+.wf .t { font-weight: 600; grid-column: 1 / -1; margin-top: 6px; }
+.wf .fin { font-weight: 700; border-top: 1px solid var(--line); padding-top: 3px; }
+.wf .v { text-align: right; font-variant-numeric: tabular-nums; }
+.grid6 { display: grid; grid-template-columns: 28px repeat(6, minmax(0, 1fr)); gap: 2px; font-size: 11.5px; max-width: 360px; }
+.grid6 div { text-align: center; padding: 5px 0; border-radius: 3px; font-variant-numeric: tabular-nums; }
+.grid6 .hd { color: var(--muted); font-weight: 600; background: none; }
+.grid6 .hit { outline: 2px solid var(--ink); outline-offset: -2px; }
+.form-row { display: flex; gap: 3px; flex-wrap: wrap; }
+.res { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 4px; font-size: 11px; font-weight: 700; color: #fff; }
+.res.W { background: var(--good); } .res.D { background: var(--draw); } .res.L { background: var(--bad); }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.kv { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; font-size: 13px; }
+.kv .v { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.tag.up { color: var(--good); } .tag.down { color: var(--bad); } .tag.flat { color: var(--muted); }
+.player { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 10px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+.player:last-child { border-bottom: 0; }
+.player .nm { font-weight: 600; }
+.player .ns { grid-column: 1 / -1; color: var(--muted); font-size: 12px; }
+.impact { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; }
+.impact.big { background: color-mix(in oklab, var(--bad) 22%, var(--surface)); }
+.impact.mid { background: color-mix(in oklab, var(--warn) 22%, var(--surface)); }
+.impact.low { background: var(--chip); color: var(--muted); }
+
+/* record */
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 18px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; }
+.tile .k { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+.tile .v { font-family: var(--font-display); font-size: 38px; font-weight: 700; line-height: 1; margin: 6px 0 4px; }
+.tile .s { font-size: 12.5px; color: var(--muted); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; margin-bottom: 16px; }
+.card h2 { font-size: 22px; text-transform: uppercase; margin-bottom: 8px; }
+.ok { color: var(--good); font-weight: 700; } .no { color: var(--bad); font-weight: 700; }
+svg text { fill: var(--muted); font-family: var(--font-body); font-size: 11px; }
+.prose { max-width: 70ch; }
+.prose p, .prose li { margin: 0 0 10px; }
+.prose h2 { font-size: 24px; text-transform: uppercase; margin: 22px 0 8px; }
+code { font-size: 12.5px; background: var(--chip); padding: 1px 5px; border-radius: 4px; }
+
+.facts { font-size: 12px; color: var(--muted); }
+.views { display: grid; gap: 8px; margin-top: 12px; }
+.blendtag { font-size: 10.5px; color: var(--muted); }
+.qp { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin-bottom: 14px; }
+.q { border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
+.q .k { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+.q .v { font-weight: 700; font-size: 14px; line-height: 1.25; }
+.q .p { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.mk { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.mkb { border-top: 2px solid var(--ink); padding-top: 8px; min-width: 0; display: grid; gap: 6px; align-content: start; }
+.mkb h4 { font-family: var(--font-display); font-size: 19px; text-transform: uppercase; margin: 0; letter-spacing: .03em; }
+.dist { display: flex; align-items: flex-end; gap: 3px; height: 92px; }
+.dist .col { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px; }
+.dist .b { width: 100%; background: color-mix(in oklab, var(--accent) 45%, var(--surface)); border-radius: 3px 3px 0 0; }
+.dist .hi .b { background: var(--accent); }
+.dist .pv { font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.dist .lx { font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.two.tight { gap: 10px; }
+table.ou td, table.ou th { padding: 3px 5px; }
+table.ou td.lead { font-weight: 700; color: var(--accent); }
+table.sc td { white-space: nowrap; }
+table.sq td, table.sq th { padding: 3px 5px; white-space: nowrap; }
+table.sq td.nm { white-space: normal; min-width: 104px; }
+table.sq input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); }
+.sqbox { max-height: 430px; overflow: auto; }
+.rt { display: inline-block; min-width: 28px; text-align: center; font-family: var(--font-display); font-weight: 700; font-size: 15px; border-radius: 6px; padding: 0 4px; background: var(--chip); }
+.rt.hi { background: color-mix(in oklab, var(--good) 30%, var(--surface)); }
+.fm { font-size: 12px; font-weight: 700; }
+.fm.hot { color: var(--good); } .fm.cold { color: var(--bad); }
+.lu { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: var(--chip); }
+.lu .warn { color: var(--bad); font-weight: 600; }
+table.sc td:first-child { white-space: normal; min-width: 120px; }
+.meter { display: inline-block; width: 36px; height: 6px; border-radius: 3px; margin-right: 6px; vertical-align: middle;
+  background: linear-gradient(90deg, var(--accent) var(--w), var(--chip) var(--w)); }
+.picks-table td { white-space: nowrap; }
+.picks-table .pp { display: block; font-size: 11.5px; color: var(--muted); }
+.picks-table td.strong { background: color-mix(in oklab, var(--accent) 14%, var(--surface)); }
+.edge { font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
+.edge.yes { background: color-mix(in oklab, var(--good) 22%, var(--surface)); }
+.edge.no { background: var(--chip); color: var(--muted); }
+
+.star { font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 999px; white-space: nowrap;
+  background: color-mix(in oklab, var(--good) 22%, var(--surface)); }
+table.strong td { vertical-align: middle; }
+table.strong .pk { font-weight: 700; margin-bottom: 4px; }
+table.strong .pp { display: block; font-size: 11.5px; color: var(--muted); font-weight: 400; }
+.odds-age { margin-top: 8px; }
+.oc-out { min-width: 0; }
+table.oc input[type=number] { width: 72px; padding: 4px 6px; font: inherit; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
+table.oc input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); }
+table.oc select { font: inherit; font-size: 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.oc-out { font-size: 12.5px; min-width: 190px; }
+.oc-out b.good { color: var(--good); } .oc-out b.bad { color: var(--bad); } .oc-out b.meh { color: var(--warn); }
+.stake { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 6px 0 10px; font-size: 13px; }
+.stake input { width: 80px; padding: 4px 6px; font: inherit; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.slip { border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 10px; display: grid; gap: 8px; }
+.slip.done { background: var(--sunk); }
+.slip-h { font-size: 15px; }
+.slip-row { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 13px; }
+.slip-row label { display: flex; align-items: center; gap: 6px; }
+.slip-row input[type=number] { width: 76px; padding: 6px 8px; font: inherit; font-size: 16px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.slip-row select { font: inherit; font-size: 13px; padding: 4px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.chips { display: inline-flex; gap: 6px; }
+.chip-btn { min-height: 34px; min-width: 48px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.chip-btn.on { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.formrow select { font: inherit; font-size: 15px; padding: 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); max-width: 100%; }
+.formrow input.wide { width: 180px; }
+.route { margin: 0; padding-left: 20px; font-size: 13.5px; display: grid; gap: 4px; }
+.route b { font-weight: 700; }
+.route code { font-size: 13px; }
+.copy-btn { min-height: 28px; padding: 0 8px; margin-left: 4px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 12px; cursor: pointer; }
+.slip-act { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.slip-yn { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; text-decoration: none; cursor: pointer; }
+.btn.yes { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.small { min-height: 32px; font-size: 13px; padding: 0 10px; }
+.limits-line { font-size: 13px; padding: 8px 10px; border-radius: 8px; background: var(--chip); margin-bottom: 10px; }
+.formrow { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin: 8px 0; font-size: 14px; }
+.formrow input { width: 96px; padding: 6px 8px; font: inherit; font-size: 16px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.st-won { color: var(--good); font-weight: 700; } .st-lost { color: var(--bad); font-weight: 700; } .st-void, .st-open, .st-pending, .st-skipped { color: var(--muted); font-weight: 600; }
+.combo { margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: var(--chip); font-size: 13px; }
+
+/* price status: green good, yellow borderline, red not worth it, grey unknown */
+.st-good { --stc: var(--good); } .st-meh { --stc: var(--warn); } .st-bad { --stc: var(--bad); } .st-none, .st-na { --stc: var(--draw); }
+.badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 700; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.badge.good { background: color-mix(in oklab, var(--good) 20%, var(--surface)); color: var(--good); }
+.badge.meh { background: color-mix(in oklab, var(--warn) 22%, var(--surface)); color: var(--warn); }
+.badge.bad { background: color-mix(in oklab, var(--bad) 16%, var(--surface)); color: var(--bad); }
+.badge.none, .badge.na { background: var(--chip); color: var(--muted); }
+details.fx.st-good, details.fx.st-meh, details.fx.st-bad, details.fx.st-none, details.fx.st-na { border-left: 6px solid var(--stc); }
+.legend-st { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); padding: 10px 14px 4px; }
+.legend-st span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--stc); margin-right: 5px; vertical-align: -1px; }
+.overview { padding: 0; overflow: hidden; }
+.pick-row { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 2px 12px; align-items: center; padding: 11px 14px; border-top: 1px solid var(--line); text-decoration: none; color: var(--ink); }
+.pick-row:hover { background: var(--sunk); }
+.pick-row .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--stc); }
+.pick-row b { font-size: 15px; }
+.pick-row small { display: block; color: var(--muted); font-size: 12px; }
+.pick-row .pr-right { text-align: right; display: grid; justify-items: end; gap: 3px; font-size: 13px; }
+.slip { border: 1px solid var(--line); border-left: 6px solid var(--stc, var(--line)); border-radius: 12px; margin-bottom: 12px; background: var(--surface); overflow: hidden; scroll-margin-top: 70px; }
+.slip-banner { padding: 10px 14px; font-size: 14px; background: color-mix(in oklab, var(--stc) 15%, var(--surface)); }
+.slip-banner b { color: var(--stc); }
+.slip-body { padding: 12px 14px 14px; display: grid; gap: 12px; }
+.slip-title b { font-family: var(--font-display); font-size: 22px; text-transform: uppercase; letter-spacing: .02em; display: block; line-height: 1.1; }
+.slip-facts { font-size: 13px; color: var(--muted); }
+.slip-facts b { color: var(--ink); }
+.fields { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: flex-end; }
+.fld { display: grid; gap: 5px; font-size: 12px; color: var(--muted); font-weight: 600; }
+.fld small { font-weight: 400; }
+.fld input.oc-odds { width: 104px; padding: 8px 10px; font: inherit; font-size: 20px; font-weight: 700; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
+.fld select { font: inherit; font-size: 14px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
+.chips input.oc-stake { width: 64px; padding: 6px 8px; font: inherit; font-size: 15px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); text-align: center; }
+.outcome { display: grid; grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); gap: 8px; }
+.outcome > div { border-radius: 10px; padding: 8px 10px; background: var(--sunk); display: grid; gap: 1px; }
+.outcome span { font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; }
+.outcome b { font-size: 19px; font-variant-numeric: tabular-nums; }
+.outcome small { color: var(--muted); font-size: 12px; }
+.out-win b { color: var(--good); } .out-lose b { color: var(--bad); }
+.slip-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn.primary { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.slip.done { opacity: .8; }
+.slip.done .slip-banner { background: var(--chip); }
+details.how > summary, details.poor-group > summary { cursor: pointer; font-size: 13.5px; font-weight: 600; color: var(--accent); padding: 4px 0; }
+details.how .route { margin-top: 6px; }
+.poor-group { margin: 4px 0 12px; }
+.poor-group > summary { color: var(--bad); }
+.refresh-row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; padding: 12px 14px 4px; }
+.combo-tick { display: flex; align-items: center; gap: 6px; }
+
+@media (max-width: 720px) {
+  .mk { grid-template-columns: minmax(0, 1fr); }
+  .mkb .kv { grid-template-columns: minmax(0, 1fr); }
+  .mkb .kv .v { text-align: left; margin-bottom: 4px; }
+  details.fx > summary { grid-template-columns: 46px minmax(0, 1fr) 20px; }
+  details.fx > summary .call { grid-column: 2 / 3; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; justify-content: flex-start; min-width: 0; }
+  .call .score { font-size: 28px; }
+  nav.tabs a { font-size: 15px; padding: 4px 8px; }
+  .sheet, .two { grid-template-columns: minmax(0, 1fr); }
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pick-row { grid-template-columns: 12px minmax(0, 1fr); align-items: start; }
+  .pick-row .dot { margin-top: 5px; }
+  .pick-row .pr-right { grid-column: 2; text-align: left; justify-items: start; grid-auto-flow: column; align-items: center; gap: 8px; margin-top: 4px; }
+}
+@media (prefers-reduced-motion: reduce) { .chev { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow" id="eyebrow">Premier League 2026-27</div>
+    <h1>Premier League <span>Predictor</span></h1>
+    <div class="asof" id="asof"></div>
+    <p class="note">Probabilities come from a goals model fed with results, xG, recent form and team news, blended with bookmaker odds once those are out. Football is noisy: a 60% favourite still fails to win 4 times in 10. This is for fun and discussion, not betting advice.</p>
+  </header>
+  <nav class="tabs" aria-label="Sections">
+    <a href="#fixtures" data-view="fixtures">Fixtures</a>
+    <a href="#picks" data-view="picks">Quick picks</a>
+    <a href="#record" data-view="record">Track record</a>
+    <a href="#bets" data-view="bets">My bets</a>
+    <a href="#table" data-view="table">Table &amp; form</a>
+    <a href="#method" data-view="method">How it works</a>
+  </nav>
+  <main>
+    <section id="v-fixtures"></section>
+    <section id="v-picks" hidden></section>
+    <section id="v-record" hidden></section>
+    <section id="v-bets" hidden></section>
+    <section id="v-table" hidden></section>
+    <section id="v-method" hidden></section>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous"></script>
+<script>
+const EMBED = /*__DATA__*/null;
+let D;
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const pc = x => Math.round(x * 100) + "%";
+const f2 = x => (x == null ? "–" : Number(x).toFixed(2));
+const sgn = x => (Math.abs(x) < 0.005 ? "±" : x > 0 ? "+" : "−") + Math.abs(x).toFixed(2);
+const dtf = (iso, o) => new Date(iso).toLocaleString(undefined, o);
+const when = iso => dtf(iso, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+const dayKey = iso => dtf(iso, { weekday: "long", day: "numeric", month: "long" });
+const time = iso => dtf(iso, { hour: "2-digit", minute: "2-digit" });
+const short = t => (D.short && D.short[t]) || t;
+
+function bar(p, thin) {
+  const [h, d, a] = p;
+  const lab = (x) => (thin || x < 0.12 ? "" : pc(x));
+  return `<div class="bar${thin ? " thin" : ""}" role="img" aria-label="Home ${pc(h)}, draw ${pc(d)}, away ${pc(a)}">
+    <div class="h" style="width:${h * 100}%">${lab(h)}</div><div class="d" style="width:${d * 100}%">${lab(d)}</div><div class="a" style="width:${a * 100}%">${lab(a)}</div></div>`;
+}
+
+/* ------------------------------------------------------------------ fixtures */
+function fixtureRow(f) {
+  const c = f.calls;
+  const ms = matchStatus(f);
+  return `<details class="fx${ms ? " st-" + ms : ""}" id="m${f.fpl_id}" data-fid="${f.fpl_id}">
+    <summary>
+      <div class="ko">${time(f.kickoff)}<small>${dtf(f.kickoff, { weekday: "short" })}</small></div>
+      <div class="match">
+        <div class="teams"><span>${esc(f.home)}</span><span class="aw">${esc(f.away)}</span></div>
+        ${bar(f.probs)}
+        <div class="legend"><span>Home win</span><span>Draw</span><span>Away win</span></div>
+        <div class="facts">${f.markets.goals.expected_total.toFixed(1)} goals${f.markets.corners ? ` · ${f.markets.corners.expected_total.toFixed(1)} corners` : ""}${f.markets.sot ? ` · ${f.markets.sot.expected_total.toFixed(1)} on target` : ""}${f.markets.cards ? ` · ${f.markets.cards.expected_total.toFixed(1)} cards` : ""} expected</div>
+      </div>
+      <div class="call">
+        <span class="lbl">Our call</span>
+        <span class="score">${esc(c.call_score.s)}</span>
+        <span class="chip conf-${c.confidence}">${c.confidence} confidence</span>
+        ${f.blend_used ? '<span class="blendtag">with bookmaker odds</span>' : ""}
+        <span class="mbadge">${ms ? badgeHtml(ms) : ""}</span>
+      </div>
+      <span class="chev" aria-hidden="true">▶</span>
+    </summary>
+    <div class="sheet"></div>
+  </details>`;
+}
+
+function sheet(f) {
+  const c = f.calls, H = f.home, A = f.away;
+  const favName = c.favourite === "home" ? H : c.favourite === "away" ? A : "Draw";
+  const alts = c.alternatives.map(s => `${s.s} <span class="small">${pc(s.p)}</span>`).join(" · ") || "none close";
+  const ml = c.most_likely_score;
+  const mk = f.market ? `<div class="views">
+      <div><div class="small">Shown above (${Math.round(f.blend_model_weight * 100)}% model + ${Math.round((1 - f.blend_model_weight) * 100)}% bookmakers): ${pc(f.probs[0])} · ${pc(f.probs[1])} · ${pc(f.probs[2])}</div>${bar(f.probs, true)}</div>
+      <div><div class="small">Model on its own: ${pc(f.model_probs[0])} · ${pc(f.model_probs[1])} · ${pc(f.model_probs[2])}</div>${bar(f.model_probs, true)}</div>
+      <div><div class="small">Bookmakers (average odds, margin removed): ${pc(f.market[0])} · ${pc(f.market[1])} · ${pc(f.market[2])}</div>${bar(f.market, true)}</div>
+    </div>${oddsAge(f)}` :
+    `<p class="small" style="margin-top:12px">Bookmaker prices for this match are not in the free odds file yet (it covers the next few days).</p>`;
+  return `
+  <div class="panel wide">
+    <h3>The verdict</h3>
+    <ul class="verdict">${f.verdict.map(v => `<li>${esc(v)}</li>`).join("")}</ul>
+    <div class="picks">
+      <div class="pick main"><div class="k">Our call</div><div class="v">${esc(c.call_score.s)}</div><div class="p">${pc(c.call_score.p)} for this exact score · result: ${esc(favName)} ${pc(c.outcome_p)}</div></div>
+      <div class="pick"><div class="k">Nearly as likely</div><div class="v" style="font-size:19px">${alts}</div><div class="p">scores within 25% of our call</div></div>
+      ${c.safe ? `<div class="pick"><div class="k">Safer call</div><div class="v" style="font-size:19px">${esc(c.safe.label)}</div><div class="p">${pc(c.safe.p)} chance</div></div>` : ""}
+      <div class="pick"><div class="k">Goals</div><div class="v" style="font-size:19px">${f2(f.xg[0])} – ${f2(f.xg[1])} xG</div><div class="p">Over 2.5: ${pc(f.over25)} · Both score: ${pc(f.btts)}</div></div>
+    </div>
+    ${f.strong && f.strong.length && !betBreak() ? `<p style="margin-top:12px"><span class="star">★ Strong pick${f.strong.length > 1 ? "s" : ""}</span> ${f.strong.map(s => `${esc(s.pick)} <span class="small">(${esc(s.market.toLowerCase())}, ${pc(s.p)}${s.early ? ", before odds" : ""})</span>`).join(" · ")}</p>` : ""}
+    ${ml.s !== c.call_score.s ? `<p class="small" style="margin-top:10px">The single most likely scoreline is ${esc(ml.s)} (${pc(ml.p)}). Draws stack up on one score while wins spread over many, so we pick the best score that matches the likeliest result.</p>` : ""}
+    ${mk}
+  </div>
+  <div class="panel wide"><h3>More predictions</h3>${marketsBlock(f)}</div>
+  ${f.scorers ? `<div class="panel wide"><h3>Goalscorers</h3>${scorersBlock(f)}</div>` : ""}
+  ${f.squad ? `<div class="panel wide sqwrap"><h3>Squads and line-up check</h3>${squadBlock(f)}</div>` : ""}
+  <div class="panel"><h3>Expected goals, step by step</h3>${waterfall(f)}</div>
+  <div class="panel"><h3>Score chances</h3>${scoreGrid(f)}</div>
+  <div class="panel wide"><h3>Form</h3><div class="two">${formBlock(H, f.form.home, "H")}${formBlock(A, f.form.away, "A")}</div></div>
+  <div class="panel wide"><h3>Team news</h3><div class="two">${newsBlock(H, f.absences.home)}${newsBlock(A, f.absences.away)}</div>
+    <p class="small" style="margin-top:8px">Impact = how much of the team's attacking output (xG + xA) or back-line minutes the player accounts for, times the chance he misses out. Absences older than four weeks count a bit less, since recent results already reflect them.</p></div>
+  <div class="panel wide"><h3>Head to head</h3>${h2hBlock(f)}</div>`;
+}
+
+/* ---------- extra markets ---------- */
+function pickChips(f) {
+  return `<div class="qp">${f.picks.map(p => `<div class="q"><div class="k">${esc(p.market)}</div><div class="v">${esc(p.pick)}</div><div class="p">${pc(p.p)}</div></div>`).join("")}</div>`;
+}
+
+function distBars(ps, labels, hiIdx) {
+  const max = Math.max(...ps);
+  return `<div class="dist">${ps.map((p, i) => `<div class="col${i === hiIdx ? " hi" : ""}" title="${esc(labels[i])}: ${(p * 100).toFixed(1)}%">
+    <span class="pv">${Math.round(p * 100)}</span><span class="b" style="height:${Math.max(2, (p / max) * 56)}px"></span><span class="lx">${esc(labels[i])}</span></div>`).join("")}</div>`;
+}
+
+function ouTable(lines, unit) {
+  return `<table class="ou"><thead><tr><th>${unit}</th><th class="r">Over</th><th class="r">Under</th></tr></thead><tbody>
+  ${lines.map(l => `<tr><td>${l.line}</td><td class="r ${l.over >= 0.5 ? "lead" : ""}">${pc(l.over)}</td><td class="r ${l.over < 0.5 ? "lead" : ""}">${pc(1 - l.over)}</td></tr>`).join("")}</tbody></table>`;
+}
+
+function teamLines(H, A, hl, al, unit) {
+  return `<table class="ou"><thead><tr><th>${unit} over</th><th class="r">${esc(short(H))}</th><th class="r">${esc(short(A))}</th></tr></thead><tbody>
+  ${hl.map((l, i) => `<tr><td>${l.line}</td><td class="r">${pc(l.over)}</td><td class="r">${pc(al[i].over)}</td></tr>`).join("")}</tbody></table>`;
+}
+
+function marketsBlock(f) {
+  const m = f.markets, g = m.goals, ht = m.halftime, c = m.corners, k = m.cards, H = f.home, A = f.away;
+  const goalsLbl = ["0", "1", "2", "3", "4", "5", "6+"];
+  const gi = g.total_dist.indexOf(Math.max(...g.total_dist));
+  let h = pickChips(f);
+  h += `<div class="mk">
+  <div class="mkb"><h4>Goals</h4>
+    <div class="small">Total goals: ${g.expected_total.toFixed(2)} expected</div>
+    ${distBars(g.total_dist, goalsLbl, gi)}
+    <div class="two tight">${ouTable(g.lines, "Total goals")}${teamLines(H, A, g.home_lines, g.away_lines, "Team goals")}</div>
+    ${g.market_over25 != null ? `<p class="small">Bookmakers make over 2.5 goals ${pc(g.market_over25)}; the model says ${pc(g.lines[2].over)}.</p>` : ""}
+  </div>
+  <div class="mkb"><h4>Result and scoring</h4>
+    <div class="kv">
+      <div>Both teams score</div><div class="v">Yes ${pc(g.btts)} · No ${pc(1 - g.btts)}</div>
+      <div>Double chance</div><div class="v">${esc(short(H))} or draw ${pc(g.double_chance["1X"])} · ${esc(short(A))} or draw ${pc(g.double_chance.X2)} · no draw ${pc(g.double_chance["12"])}</div>
+      <div>Draw no bet</div><div class="v">${esc(short(H))} ${pc(g.draw_no_bet[0])} · ${esc(short(A))} ${pc(g.draw_no_bet[1])}</div>
+      <div>Clean sheet</div><div class="v">${esc(short(H))} ${pc(g.clean_sheet[0])} · ${esc(short(A))} ${pc(g.clean_sheet[1])}</div>
+      <div>Win to nil</div><div class="v">${esc(short(H))} ${pc(g.win_to_nil[0])} · ${esc(short(A))} ${pc(g.win_to_nil[1])}</div>
+      <div>First goal</div><div class="v">${esc(short(H))} ${pc(g.first_goal[0])} · ${esc(short(A))} ${pc(g.first_goal[2])} · none ${pc(g.first_goal[1])}</div>
+      <div>Win by 1 / 2 / 3+</div><div class="v">${esc(short(H))} ${["1", "2", "3+"].map(x => pc(g.margin[x][0])).join(" / ")}</div>
+      <div></div><div class="v">${esc(short(A))} ${["1", "2", "3+"].map(x => pc(g.margin[x][1])).join(" / ")}</div>
+      <div>Win by 2+ (−1.5 handicap)</div><div class="v">${esc(short(H))} ${pc(g.handicap_15[0])} · ${esc(short(A))} ${pc(g.handicap_15[1])}</div>
+      <div>Odd / even total</div><div class="v">${pc(g.odd)} / ${pc(1 - g.odd)}</div>
+    </div>
+  </div>
+  <div class="mkb"><h4>Half-time</h4>
+    ${bar(ht.ht_probs)}
+    <div class="legend"><span>${esc(short(H))} lead</span><span>Level</span><span>${esc(short(A))} lead</span></div>
+    <div class="kv" style="margin-top:8px">
+      <div>Goal before half-time</div><div class="v">${pc(ht.ht_goal)}</div>
+      <div>Over 1.5 first-half goals</div><div class="v">${pc(ht.ht_over15)}</div>
+      <div>First-half xG</div><div class="v">${f2(ht.ht_xg[0])} – ${f2(ht.ht_xg[1])}</div>
+    </div>
+    <div class="small" style="margin:8px 0 2px">Half-time / full-time, most likely:</div>
+    <div class="kv">${ht.htft.slice(0, 5).map(x => `<div>${x.ht === "Draw" ? "Level" : esc(x.ht === "Home" ? short(H) : short(A)) + " lead"} → ${x.ft === "Draw" ? "draw" : esc(x.ft === "Home" ? short(H) : short(A)) + " win"}</div><div class="v">${pc(x.p)}</div>`).join("")}</div>
+    <p class="small">About ${Math.round(ht.share * 100)}% of Premier League goals come before the break, so the first half is usually tighter.</p>
+  </div>`;
+  if (c) {
+    const labs = c.dist.p.map((_, i) => String(c.dist.from + i));
+    const ci = c.dist.p.indexOf(Math.max(...c.dist.p));
+    const cf = m.corner_form;
+    h += `<div class="mkb"><h4>Corners</h4>
+    <div class="small">Expected: ${esc(short(H))} ${c.expected[0].toFixed(1)} · ${esc(short(A))} ${c.expected[1].toFixed(1)} · total ${c.expected_total.toFixed(1)}</div>
+    ${distBars(c.dist.p, labs, ci)}
+    <div class="two tight">${ouTable(c.lines, "Total corners")}${teamLines(H, A, c.home_lines, c.away_lines, "Team corners")}</div>
+    <div class="small" style="margin-top:6px">More corners: ${esc(short(H))} ${pc(c.more[0])} · level ${pc(c.more[1])} · ${esc(short(A))} ${pc(c.more[2])}</div>
+    ${bar(c.more, true)}
+    ${cf.home && cf.away ? `<p class="small">Last ${cf.home.n} games: ${esc(H)} win ${cf.home.for_pg.toFixed(1)} and concede ${cf.home.against_pg.toFixed(1)} a game; ${esc(A)} win ${cf.away.for_pg.toFixed(1)} and concede ${cf.away.against_pg.toFixed(1)}.</p>` : ""}
+  </div>`;
+  }
+  const so = m.sot;
+  if (so) {
+    const labs = so.dist.p.map((_, i) => String(so.dist.from + i));
+    const si = so.dist.p.indexOf(Math.max(...so.dist.p));
+    const sf = m.sot_form;
+    h += `<div class="mkb"><h4>Shots on target</h4>
+    <div class="small">Expected: ${esc(short(H))} ${so.expected[0].toFixed(1)} · ${esc(short(A))} ${so.expected[1].toFixed(1)} · total ${so.expected_total.toFixed(1)}</div>
+    ${distBars(so.dist.p, labs, si)}
+    <div class="two tight">${ouTable(so.lines, "Total on target")}${teamLines(H, A, so.home_lines, so.away_lines, "Team on target")}</div>
+    <div class="small" style="margin-top:6px">More shots on target: ${esc(short(H))} ${pc(so.more[0])} · level ${pc(so.more[1])} · ${esc(short(A))} ${pc(so.more[2])}</div>
+    ${bar(so.more, true)}
+    ${sf.home && sf.away ? `<p class="small">Last ${sf.home.n} games: ${esc(H)} ${sf.home.for_pg.toFixed(1)} on target and ${sf.home.against_pg.toFixed(1)} against a game; ${esc(A)} ${sf.away.for_pg.toFixed(1)} and ${sf.away.against_pg.toFixed(1)}. Missing attackers lower these the same way they lower expected goals.</p>` : ""}
+  </div>`;
+  }
+  if (k) {
+    const labs = k.dist.p.map((_, i) => String(k.dist.from + i));
+    const ki = k.dist.p.indexOf(Math.max(...k.dist.p));
+    const kf = m.card_form;
+    const refTxt = m.referee ? (m.referee_known ? `Referee ${esc(m.referee)} (${k.ref_games} games in the data) shows ${k.ref_mult >= 1 ? "about " + Math.round((k.ref_mult - 1) * 100) + "% more" : "about " + Math.round((1 - k.ref_mult) * 100) + "% fewer"} cards than expected for his matches; that is included.` : `Referee ${esc(m.referee)} has too few games in the data to adjust for.`)
+      : "Referee not announced yet; the figures assume an average referee.";
+    h += `<div class="mkb"><h4>Cards</h4>
+    <div class="small">Expected: ${esc(short(H))} ${k.expected[0].toFixed(1)} · ${esc(short(A))} ${k.expected[1].toFixed(1)} · total ${k.expected_total.toFixed(1)} (yellow and red each count 1)</div>
+    ${distBars(k.dist.p, labs, ki)}
+    <div class="two tight">${ouTable(k.lines, "Total cards")}${teamLines(H, A, k.home_lines, k.away_lines, "Team cards")}</div>
+    <p class="small">${refTxt}${kf.home && kf.away ? ` Last ${kf.home.n} games: ${esc(H)} ${kf.home.for_pg.toFixed(1)} cards a game, ${esc(A)} ${kf.away.for_pg.toFixed(1)}.` : ""}</p>
+  </div>`;
+  }
+  return h + `</div><p class="small">${edgeText()}</p>`;
+}
+
+function scorersBlock(f) {
+  const s = f.scorers;
+  const tbl = (team, rows) => `<div class="scroll"><table class="sc"><thead><tr><th>${esc(team)}</th><th class="r">Anytime</th><th class="r">2+</th><th class="r">First</th><th class="r">Mins</th><th class="r">Season</th><th class="r">Last 5</th></tr></thead><tbody>
+    ${rows.map(p => `<tr><td><b>${esc(p.name)}</b> <span class="small">${p.pos}${p.chance < 100 ? ` · ${p.chance}% to play` : ""}</span></td>
+      <td class="r"><span class="meter" style="--w:${Math.min(100, p.anytime * 100 / 0.6)}%"></span><b>${pc(p.anytime)}</b></td><td class="r">${pc(p.brace)}</td><td class="r">${pc(p.first)}</td>
+      <td class="r">${p.exp_minutes}</td><td class="r">${p.season_goals} <span class="small">(${p.season_xg.toFixed(1)} xG)</span></td><td class="r">${p.last5_goals} <span class="small">(${p.last5_xg.toFixed(1)})</span></td></tr>`).join("")}
+  </tbody></table></div>`;
+  const S = D.track.scorers_summary;
+  return `<div class="two">${tbl(f.home, s.home)}${tbl(f.away, s.away)}</div>
+  <p class="small" style="margin-top:8px">No goalscorer (0-0): ${pc(s.no_scorer)}. Mins = expected minutes (recent games, times chance of playing). Season and Last 5 show goals with xG in brackets. Each team's expected goals (${f2(f.xg[0])} and ${f2(f.xg[1])}) are shared out by each player's scoring rate × expected minutes, so if a striker is ruled out his share moves to whoever plays instead.${S ? ` Backtest: when the model gave players ${Math.round(S.buckets.at(-2).from * 100)}–${Math.round(S.buckets.at(-2).to * 100)}%, ${pc(S.buckets.at(-2).actual)} of them scored.` : ""}</p>`;
+}
+
+/* ---------- squads, player ratings, line-up check ---------- */
+function formMark(p) {
+  if (p.form === "hot") return `<span class="fm hot" title="Last 4 games: ${p.att_recent.toFixed(2)} xG+xA per 90 vs ${p.att.toFixed(2)} this season">▲ Hot</span>`;
+  if (p.form === "cold") return `<span class="fm cold" title="Last 4 games: ${p.att_recent.toFixed(2)} xG+xA per 90 vs ${p.att.toFixed(2)} this season">▼ Cold</span>`;
+  return `<span class="small">–</span>`;
+}
+function rtMark(r) { return r == null ? `<span class="small">–</span>` : `<span class="rt${r >= 85 ? " hi" : ""}">${r}</span>`; }
+
+function squadBlock(f) {
+  const tbl = (side, team) => `<div class="scroll sqbox"><table class="sq" data-side="${side}"><thead><tr><th title="Starts?">XI</th><th>${esc(team)}</th><th class="r" title="Attack rating, 45-99">Rating</th><th class="r">Form</th><th class="r" title="Average minutes per game this season">Mins</th><th class="r" title="Goals + assists this season (xG + xA)">G+A</th></tr></thead><tbody>
+    ${f.squad[side].filter(p => p.show).map(p => `<tr><td><input type="checkbox" data-pid="${p.pid}"${p.xi ? " checked" : ""} aria-label="${esc(p.name)} starts"></td>
+      <td class="nm"><b>${esc(p.name)}</b> <span class="small">${p.pos}${p.chance < 100 ? ` · ${p.chance}% to play` : ""}</span></td>
+      <td class="r">${rtMark(p.rating)}</td><td class="r">${formMark(p)}</td><td class="r">${Math.round(p.usual * 90)}</td>
+      <td class="r">${p.g}+${p.a} <span class="small">(${(p.xg + p.xa).toFixed(1)})</span></td></tr>`).join("")}
+  </tbody></table></div>`;
+  const T = (D.model.squad_tests || []).find(x => /line-ups \(/.test(x.name)), B = (D.model.squad_tests || [])[0];
+  return `<p class="small" style="margin:0 0 8px">When the team sheets come out (about an hour before kickoff), tick who starts and the chances below update. It starts with our guess at each XI: the fit players with the most minutes.</p>
+  <div class="two">${tbl("home", f.home)}${tbl("away", f.away)}</div>
+  <div class="lu" aria-live="polite"></div>
+  <p class="small" style="margin-top:8px"><b>Rating</b> is our own attack rating from 45 to 99, not a FIFA/EA rating. It ranks a player's xG + 0.7 × xA per 90 minutes against players in the same position, pulled towards what his FPL price suggests until he has played about five full games. Goalkeepers don't get one. <b>Form</b>: ▲ Hot / ▼ Cold when his last 4 games are well above or below his season. Each side's expected goals move by how much attacking value its XI has compared with its usual line-up.${T && B ? ` Tested on ${D.model.squad_tests_games || 87} games this season: knowing the real line-ups made the chances sharper (model RPS ${B.rps.toFixed(4)} → ${T.rps.toFixed(4)}, lower is better) but called only ${T.right - B.right} more result${T.right - B.right === 1 ? "" : "s"} right (${T.right} vs ${B.right}).` : ""}</p>`;
+}
+
+function dcProbs(lh, la, rho) {
+  const po = (l, k) => { let v = Math.exp(-l); for (let i = 1; i <= k; i++) v *= l / i; return v; };
+  let h = 0, d = 0, a = 0, t = 0;
+  for (let x = 0; x <= 10; x++) for (let y = 0; y <= 10; y++) {
+    let m = po(lh, x) * po(la, y);
+    if (x === 0 && y === 0) m *= Math.max(0, 1 - lh * la * rho);
+    else if (x === 0 && y === 1) m *= Math.max(0, 1 + lh * rho);
+    else if (x === 1 && y === 0) m *= Math.max(0, 1 + la * rho);
+    else if (x === 1 && y === 1) m *= Math.max(0, 1 - rho);
+    t += m; if (x > y) h += m; else if (x === y) d += m; else a += m;
+  }
+  return [h / t, d / t, a / t];
+}
+
+function lineupUpdate(box, f) {
+  const sel = { home: new Set(), away: new Set() };
+  box.querySelectorAll("table.sq").forEach(t => t.querySelectorAll("input:checked").forEach(i => sel[t.dataset.side].add(+i.dataset.pid)));
+  const dev = side => {
+    let u = 0, e = 0;
+    f.squad[side].forEach(p => { u += p.usual * p.att; e += (sel[side].has(p.pid) ? p.mws : p.mwb) / 90 * p.att; });
+    return u > 0 ? e / u - 1 : 0;
+  };
+  const k = D.model.lineup_weight, cl = x => Math.min(1.35, Math.max(0.7, x));
+  const dh = dev("home"), da = dev("away");
+  const lh = f.lineup_base_xg[0] * cl(Math.exp(k * dh)), la = f.lineup_base_xg[1] * cl(Math.exp(k * da));
+  let p = dcProbs(lh, la, D.model.rho);
+  const blend = !!f.market;
+  if (blend) p = p.map((x, i) => f.blend_model_weight * x + (1 - f.blend_model_weight) * f.market[i]);
+  const pctd = x => (x >= 0 ? "+" : "−") + Math.abs(Math.round(x * 100)) + "%";
+  const nh = sel.home.size, na = sel.away.size;
+  const warn = nh !== 11 || na !== 11 ? `<div class="warn small">Ticked ${nh} for ${esc(f.home)} and ${na} for ${esc(f.away)}; a starting XI is 11.</div>` : "";
+  box.querySelector(".lu").innerHTML = `<div><b>With these line-ups:</b> ${esc(f.home)} ${pc(p[0])} · draw ${pc(p[1])} · ${esc(f.away)} ${pc(p[2])}</div>
+    ${bar(p, true)}
+    <div class="small" style="margin-top:6px">Expected goals ${f2(lh)} – ${f2(la)}. Attacking value vs usual line-up: ${esc(f.home)} ${pctd(dh)}, ${esc(f.away)} ${pctd(da)}.${blend ? ` Blended ${Math.round(f.blend_model_weight * 100)}/${Math.round((1 - f.blend_model_weight) * 100)} with the bookmakers, like the main prediction.` : ""} Main prediction (team news instead of line-ups): ${pc(f.probs[0])} · ${pc(f.probs[1])} · ${pc(f.probs[2])}. Only these result chances update; the other predictions on this page don't.</div>${warn}`;
+}
+
+function hasEdge(r) { return r.brier < r.base_brier - 0.003; }
+function edgeText() {
+  const ms = D.track.markets_summary || [];
+  const yes = ms.filter(hasEdge).map(r => r.label.toLowerCase());
+  const no = ms.filter(r => !hasEdge(r)).map(r => r.label.toLowerCase());
+  return `Track record so far: the model beats a simple base-rate guess on ${yes.join(", ") || "none of these yet"}${no.length ? `, but not on ${no.join(", ")}` : ""}. See the Track record tab.`;
+}
+
+function waterfall(f) {
+  const side = (name, w) => `
+    <div class="t">${esc(name)}</div>
+    <div>Usual level (two-season rating)</div><div class="v">${f2(w.usual)}</div>
+    <div>Recent form and this season</div><div class="v ${w.form >= 0 ? "pos" : "neg"}">${sgn(w.form)}</div>
+    <div>Own missing players</div><div class="v ${w.own_absences >= 0 ? "pos" : "neg"}">${sgn(w.own_absences)}</div>
+    <div>Opponent's missing defenders/GK</div><div class="v ${w.opp_absences > 0 ? "pos" : ""}">${sgn(w.opp_absences)}</div>
+    ${f.blend_used ? `<div>Bookmakers' view (blend)</div><div class="v ${w.market > 0 ? "pos" : w.market < 0 ? "neg" : ""}">${sgn(w.market)}</div>` : ""}
+    <div class="fin">Expected goals</div><div class="v fin">${f2(w.final)}</div>`;
+  return `<div class="wf">${side(f.home + " (home)", f.waterfall.home)}${side(f.away + " (away)", f.waterfall.away)}</div>
+  <p class="small" style="margin-top:8px">Home advantage (×${D.model.home_advantage}) is already inside each rating step.</p>`;
+}
+
+function scoreGrid(f) {
+  const g = f.grid, max = Math.max(...g.flat());
+  let h = `<div class="grid6"><div class="hd"></div>${[0,1,2,3,4,5].map(j => `<div class="hd">${j}</div>`).join("")}`;
+  for (let i = 0; i < 6; i++) {
+    h += `<div class="hd">${i}</div>`;
+    for (let j = 0; j < 6; j++) {
+      const p = g[i][j], k = Math.round(8 + 72 * (p / max));
+      const col = i > j ? "var(--home)" : i < j ? "var(--away)" : "var(--draw)";
+      const isCall = `${i}-${j}` === f.calls.call_score.s;
+      h += `<div class="${isCall ? "hit" : ""}" style="background:color-mix(in oklab, ${col} ${k}%, var(--surface));${k > 50 && i !== j ? "color:#fff" : ""}" title="${esc(f.home)} ${i}-${j} ${esc(f.away)}: ${(p * 100).toFixed(1)}%">${p >= 0.005 ? Math.round(p * 100) : ""}</div>`;
+    }
+  }
+  h += `</div><p class="small" style="margin-top:8px">Rows: ${esc(f.home)} goals. Columns: ${esc(f.away)} goals. Numbers are % chances; the outlined cell is our call.</p>
+  <div class="small">Top scores: ${f.scores.slice(0, 5).map(s => `${s.s} (${(s.p * 100).toFixed(1)}%)`).join(", ")}</div>`;
+  return h;
+}
+
+function levelClass(t) { return /Peak|Above/.test(t) ? "up" : /Slump|Below/.test(t) ? "down" : "flat"; }
+
+function formBlock(name, F, venue) {
+  const s = F.season, v = venue === "H" ? F.home5 : F.away5, l6 = F.last6_sum;
+  const chips = F.last6.map(g => `<span class="res ${g.res}" title="${g.venue === "H" ? "vs" : "at"} ${esc(g.opp)} ${g.gf}-${g.ga}${g.xgf != null ? ` (xG ${f2(g.xgf)}-${f2(g.xga)})` : ""}">${g.res}</span>`).join("");
+  const fin = F.goals_minus_xg, def = F.xga_minus_ga;
+  const finTxt = fin == null ? "–" : `${Math.abs(fin).toFixed(1)} ${fin >= 0 ? "more" : "fewer"} than xG`;
+  const defTxt = def == null ? "–" : `${Math.abs(def).toFixed(1)} ${def >= 0 ? "fewer" : "more"} than xG`;
+  return `<div>
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-bottom:6px">
+      <b>${esc(name)}</b><span class="tag ${levelClass(F.level_tag)}">${esc(F.level_tag)}</span></div>
+    <div class="form-row" aria-label="Last six league games, newest first">${chips}</div>
+    <div class="small" style="margin:4px 0 8px">Last 6, newest first. Hover a square for the score.</div>
+    <div class="kv">
+      <div>Last 6: points</div><div class="v">${l6 ? l6.pts + " / 18" : "–"}</div>
+      <div>Last 6: goals for–against</div><div class="v">${l6 ? l6.gf + "–" + l6.ga : "–"}</div>
+      <div>Last 6: xG for–against per game</div><div class="v">${l6 && l6.xgf_pg != null ? f2(l6.xgf_pg) + "–" + f2(l6.xga_pg) : "–"}</div>
+      <div>${venue === "H" ? "Last 5 at home" : "Last 5 away"}: points</div><div class="v">${v ? v.pts + " / " + v.n * 3 : "–"}</div>
+      <div>Season: points (xG says)</div><div class="v">${s.pts}${F.xpts != null ? ` <span class="small">(${F.xpts.toFixed(1)} from ${F.n_xg} games with xG)</span>` : ""}</div>
+      <div>Goals scored (season)</div><div class="v ${fin > 0 ? "pos" : fin < 0 ? "neg" : ""}">${finTxt}</div>
+      <div>Goals let in (season)</div><div class="v ${def > 0 ? "pos" : def < 0 ? "neg" : ""}">${defTxt}</div>
+      <div>Current vs usual level</div><div class="v ${F.level_delta > 0 ? "pos" : "neg"}">${sgn(F.level_delta)} GD/game</div>
+    </div></div>`;
+}
+
+function newsBlock(name, av) {
+  const ps = av.players;
+  const rows = ps.length ? ps.map(p => {
+    const cls = p.impact >= 0.08 ? "big" : p.impact >= 0.03 ? "mid" : "low";
+    const lab = p.impact >= 0.08 ? "Key loss" : p.impact >= 0.03 ? "Some impact" : "Minor";
+    return `<div class="player"><span><span class="nm">${esc(p.name)}</span> <span class="small">${p.pos} · ${esc(p.status)} · ${p.chance}% to play</span></span>
+      <span class="impact ${cls}">${lab}</span>
+      <span class="ns">${esc(p.news)}${p.back_by_then ? " (due back by this match)" : ""} · ${p.minutes} min this season${p.attack_share > 0.02 ? ` · ${pc(p.attack_share)} of team xG+xA` : ""}</span></div>`;
+  }).join("") : `<div class="small">No injury or suspension news for regular players.</div>`;
+  const fr = av.fringe && av.fringe.length ? `<div class="small" style="margin-top:4px">Also out, rarely used: ${av.fringe.map(esc).join(", ")}</div>` : "";
+  return `<div><div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:4px"><b>${esc(name)}</b>
+    <span class="small">attack ×${av.attack_mult.toFixed(2)} · concede ×${av.concede_mult.toFixed(2)}</span></div>${rows}${fr}</div>`;
+}
+
+function h2hBlock(f) {
+  const h = f.h2h;
+  if (!h.games.length) return `<p class="small">No league meetings in the data (Premier League since 2015-16, Championship since 2021-22).</p>`;
+  return `<p style="margin:0 0 8px">Last ${h.games.length} league meetings: <b>${esc(f.home)} ${h.a_wins}</b> · draws ${h.draws} · <b>${esc(f.away)} ${h.b_wins}</b></p>
+  <div class="scroll"><table><thead><tr><th>Date</th><th>Home</th><th class="r">Score</th><th>Away</th></tr></thead><tbody>
+  ${h.games.map(g => `<tr><td>${dtf(g.date, { day: "numeric", month: "short", year: "numeric" })}</td><td>${esc(g.home)}</td><td class="r"><b>${g.hg}–${g.ag}</b></td><td>${esc(g.away)}${g.div === "E1" ? ' <span class="small">(Championship)</span>' : ""}</td></tr>`).join("")}
+  </tbody></table></div><p class="small" style="margin-top:6px">Shown for context only. Squads change a lot, so the model does not use head-to-head directly; current ratings already say more.</p>`;
+}
+
+function playedStrip() {
+  const cur = D.current_gw;
+  const rows = D.track.backtest.filter(r => r.gw === cur);
+  if (!rows.length) return "";
+  const ok = rows.filter(r => r.correct).length;
+  return `<div class="gw-head"><h2>GW${cur} so far</h2><span class="sub">${ok} of ${rows.length} results called right by the pre-round prediction</span></div>
+  <div class="card scroll" style="padding:8px 12px"><table><thead><tr><th>Match</th><th>Our chances (H·D·A)</th><th class="r">Call</th><th class="r">Result</th><th></th></tr></thead><tbody>
+  ${rows.map(r => `<tr><td>${esc(r.home)} v ${esc(r.away)}</td><td style="min-width:120px">${bar(r.probs, true)}<span class="small">${pc(r.probs[0])} · ${pc(r.probs[1])} · ${pc(r.probs[2])}</span></td>
+    <td class="r">${esc(r.pick_score)}</td><td class="r"><b>${esc(r.actual)}</b>${r.provisional ? ' <span class="small">prov.</span>' : ""}</td>
+    <td>${r.correct ? '<span class="ok">✓ result</span>' : '<span class="no">✗</span>'}${r.exact ? ' <span class="ok">+ exact</span>' : ""}</td></tr>`).join("")}
+  </tbody></table></div>`;
+}
+
+function ago(ms) {
+  const hrs = Math.round(ms / 36e5);
+  if (hrs < 48) return `${hrs} hours`;
+  const d = Math.floor(hrs / 24), r = hrs % 24;
+  return `${d} days${r ? ` ${r} h` : ""}`;
+}
+function oddsAge(f) {
+  if (!f.odds_as_of) return "";
+  const gap = new Date(f.kickoff) - new Date(f.odds_as_of);
+  return `<p class="small odds-age">Bookmaker odds taken ${esc(when(f.odds_as_of))}, ${ago(gap)} before kickoff. football-data.co.uk, the free source, posts them a couple of times a week and doesn't update them before kickoff, so later team news isn't in these prices. The model's share uses the latest FPL news.</p>`;
+}
+const STATUS = {
+  good: { icon: "✓", label: "Good bet" }, meh: { icon: "≈", label: "Borderline" },
+  bad: { icon: "✗", label: "Not worth it" }, none: { icon: "?", label: "Check the price" }, na: { icon: "–", label: "Not on Oddset" },
+};
+const RANK = { good: 0, meh: 1, none: 2, bad: 3, na: 4 };
+const badgeHtml = st => `<span class="badge ${st}">${STATUS[st].icon} ${STATUS[st].label}</span>`;
+function typedOdds(id) { const v = parseFloat(String(store.get("odds", {})[id] || "").replace(",", ".")); return v > 1 ? v : null; }
+const defaultRule = s => (s.tie != null ? "lose" : "void");   // Oddset's corners market is three-way: a tie loses
+function pickFair(s, rule) { const ch = legChances(s, rule); return (ch.w + ch.l) / ch.w; }
+function statusOf(price, fair) { return !price ? "none" : price >= fair * MARGIN ? "good" : price > fair ? "meh" : "bad"; }
+function pickStatus(f, s) {
+  if (s.key === "sot") return "na";
+  const id = `${f.fpl_id}_${s.key}`;
+  return statusOf(typedOdds(id) || oddsetPrice(f, s), pickFair(s, store.get("tie", {})[id] || defaultRule(s)));
+}
+function matchStatus(f) {
+  if (!(f.strong || []).length || betBreak() || !notStarted(f)) return null;
+  return f.strong.map(s => pickStatus(f, s)).sort((a, b) => RANK[a] - RANK[b])[0];
+}
+function pickLabel(s) {
+  if (s.key === "corners" || s.key === "sot") return `${s.pick}: ${s.market.toLowerCase()}`;
+  if (s.key === "result") return s.pick === "Draw" ? "Draw" : s.pick.replace(/ win$/, " to win");
+  return s.pick;
+}
+function notStarted(f) { return new Date(f.kickoff).getTime() > Date.now(); }   // hide picks once a match has kicked off
+function overviewRow(f, s) {
+  const st = pickStatus(f, s), id = `${f.fpl_id}_${s.key}`;
+  const price = s.key === "sot" ? null : (typedOdds(id) || oddsetPrice(f, s));
+  const need = s.key === "sot" ? null : minOdds(pickFair(s, store.get("tie", {})[id] || defaultRule(s)));
+  return `<a class="pick-row st-${st}" href="#slip-${id}" data-slip="${id}" data-sid="${id}">
+    <span class="dot"></span>
+    <span><b>${esc(pickLabel(s))}</b><small>${esc(f.home)} v ${esc(f.away)} · ${esc(when(f.kickoff))} · our chance ${pc(s.p)}</small></span>
+    <span class="pr-right">${badgeHtml(st)}<small>${s.key === "sot" ? "Oddset has no market for this" : `${price ? `Oddset ${price.toFixed(2)} · ` : ""}good from ${need}`}</small></span></a>`;
+}
+function strongCard() {
+  if (betBreak()) return "";
+  const L = D.fixtures.filter(notStarted).flatMap(f => (f.strong || []).map(s => ({ f, s })));
+  const rules = D.track.strong_record || [];
+  const P = (a, b) => (b ? Math.round((100 * a) / b) + "%" : "–");
+  let h = `<div class="gw-head"><h2>Strongest picks</h2><span class="sub">The calls the model gets right most often, coloured by Oddset's price</span></div>`;
+  if (!L.length) return h + `<div class="card"><p class="small" style="margin:0">No strong pick in the next two gameweeks. That's normal in an even round. No pick is better than a weak one.</p></div>`;
+  L.sort((a, b) => RANK[pickStatus(a.f, a.s)] - RANK[pickStatus(b.f, b.s)] || a.f.kickoff.localeCompare(b.f.kickoff));
+  return h + `<div class="card overview" id="overview">
+    <div class="refresh-row"><span class="small" id="req-status">${reqText()}</span></div>
+    <div class="legend-st"><span class="st-good">Good bet: price above what it needs</span><span class="st-meh">Borderline</span><span class="st-bad">Not worth it</span><span class="st-none">No price yet</span></div>
+    ${L.map(({ f, s }) => overviewRow(f, s)).join("")}
+    <p class="small" style="padding:8px 14px 12px;margin:0">How often each kind of pick came in, last season / this season: ${rules.map(r => `${esc(r.market.toLowerCase())} ${P(r.last_hits, r.last_n)} / ${P(r.this_hits, r.this_n)}`).join(" · ")}. Coming in often isn't the same as a good bet: the colour says whether Oddset pays enough. Not betting advice.</p></div>`;
+}
+
+/* ---------- bet slip: risk and reward, yes / no, limits and breaks ---------- */
+const STAKE_MIN = 20, STAKE_MAX = 100, MARGIN = 1.05, COOL_HOURS = 72;
+const minOdds = fair => (Math.ceil(fair * MARGIN * 100 - 1e-9) / 100).toFixed(2);   // lowest odds worth taking, rounded up
+const DEF_LIMITS = { weekly_budget: 200, monthly_loss_limit: 300 };
+const ODDSET_PL = "https://danskespil.dk/oddset/sports/competition/14853/fodbold/england/england-premier-league/matches";
+const MARKET_DK = { result: "Kampvinder", dc: "Dobbeltchance", sot: "Skud på mål", corners: "Hjørnespark" };
+// Oddset spells some clubs out in full ("Manchester United"); the search works on the first word too
+const ODDSET_NAMES = { "Man United": "Manchester United", "Man City": "Manchester City", "Nott'm Forest": "Nottingham Forest" };
+function oddsetName(f, side) { return ODDSET_NAMES[f[side]] || f[side]; }
+function oddsetSelection(f, s) {
+  if (s.key === "result") return s.pick === "Draw" ? "X" : s.pick.startsWith(f.home) ? "1" : "2";
+  if (s.key === "dc") return s.pick.startsWith(f.home) ? "1X" : "X2";
+  return s.side === "away" ? oddsetName(f, "away") : oddsetName(f, "home");
+}
+function oddsetPrice(f, s) {
+  const o = f.oddset; if (!o) return null;
+  if (s.key === "result" && o.result) return o.result[oddsetSelection(f, s)] || null;
+  if (s.key === "dc" && o.dc) return o.dc[oddsetSelection(f, s)] || null;
+  if (s.key === "corners" && o.corners) return o.corners[s.side === "away" ? "2" : "1"] || null;
+  return null;
+}
+function oddsetLine(f, s) {
+  const pr = oddsetPrice(f, s), url = f.oddset && f.oddset.url;
+  const when_ = f.oddset && f.oddset.checked_at ? ` (checked ${esc(when(f.oddset.checked_at))})` : "";
+  if (pr) return `<div class="small">Oddset: <b>${pr.toFixed(2)}</b>${when_}${url ? ` · <a href="${esc(url)}" target="_blank" rel="noopener">open this match ↗</a>` : ""}</div>`;
+  const later = s.key === "corners" ? "Oddset opens its corners markets on match day." : "Not checked yet.";
+  return `<div class="small">Oddset price: ${later}${url ? ` <a href="${esc(url)}" target="_blank" rel="noopener">Open this match ↗</a>` : ""}</div>`;
+}
+const MARKET_PATH = { result: "Kampvinder", dc: "tab Resultat → Dobbeltchance", corners: "tab Hjørne → Hvem får flest hjørnespark" };
+function routeHtml(f, s, stake) {
+  const search = oddsetName(f, "home"), url = f.oddset && f.oddset.url;
+  return `<ol class="route">
+    ${url ? `<li><a href="${esc(url)}" target="_blank" rel="noopener"><b>Open ${esc(oddsetName(f, "home"))} – ${esc(oddsetName(f, "away"))} on Oddset</b></a> (or search <code>${esc(search)}</code><button type="button" class="copy-btn" data-copy="${esc(search)}">Copy</button> in the app)</li>`
+      : `<li><a href="${ODDSET_PL}" target="_blank" rel="noopener"><b>Open Oddset</b></a>, or the Oddset app, and search <code>${esc(search)}</code><button type="button" class="copy-btn" data-copy="${esc(search)}">Copy</button></li>
+    <li>Tap <b>${esc(oddsetName(f, "home"))} – ${esc(oddsetName(f, "away"))}</b></li>`}
+    <li>${esc(MARKET_PATH[s.key] || s.market)} → tap <b>${esc(oddsetSelection(f, s))}</b>${s.key === "corners" ? " (a tie, Uafgjort, loses this bet)" : ""}</li>
+    <li>Check the odds are at least <b class="oc-min2">${minOdds(s.fair)}</b>, type <b class="oc-stk">${stake} kr</b> and press bet</li>
+    <li>Back here: tap <b>I placed this bet</b></li></ol>`;
+}
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("plp_" + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem("plp_" + k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } },
+};
+let BETDB = null, BETS = {}, LIM = null, BET_STATE = "loading";   // loading | slow | ready | off
+let lastBreak = false;
+let REQ = null, REQREF = null;   // "check Oddset prices" request, answered by a scheduled task
+const REQ_WAIT_MIN = 15;
+const JOB_HOURS = "08:00–22:45";
+let JOB = null, JOBREF = null;
+const JOB_LABEL = { refresh: "Refresh predictions", test_notify: "Send test notification" };
+function jobText() {
+  if (BET_STATE === "off") return "Sign in above to use these buttons.";
+  if (!JOB || !JOB.status) return `The cloud job picks requests up within ${REQ_WAIT_MIN} minutes (${JOB_HOURS}).`;
+  const stale = Date.now() - Date.parse(JOB.requested_at || 0) > 3 * 36e5;
+  const what = JOB_LABEL[JOB.action] || "Request";
+  if ((JOB.status === "waiting" || JOB.status === "checking") && stale) return `${what} from ${esc(when(JOB.requested_at))} never finished. Press a button to try again.`;
+  if (JOB.status === "waiting") return `${what}: requested ${esc(when(JOB.requested_at))}. Done within ${REQ_WAIT_MIN} minutes (${JOB_HOURS}).`;
+  if (JOB.status === "checking") return `${what}: running now…`;
+  if (JOB.status === "done") return `${what}: done ${esc(when(JOB.done_at || JOB.requested_at))}.${JOB.summary ? " " + esc(JOB.summary) : ""}`;
+  if (JOB.status === "failed") return `${what} didn't work${JOB.summary ? `: ${esc(JOB.summary)}` : ""}.`;
+  return "";
+}
+function jobBusy() {
+  return JOB && (JOB.status === "waiting" || JOB.status === "checking") && Date.now() - Date.parse(JOB.requested_at || 0) <= 3 * 36e5;
+}
+function jobPaint() {
+  const t = $("#job-status"); if (t) t.innerHTML = jobText();
+  document.querySelectorAll("[data-job]").forEach(b => { b.disabled = BET_STATE !== "ready" || !JOBREF || !!jobBusy(); });
+}
+async function requestJob(action) {
+  if (!JOBREF) return;
+  document.querySelectorAll("[data-job]").forEach(b => { b.disabled = true; });
+  try { await JOBREF.set({ action, status: "waiting", requested_at: new Date().toISOString() }); }
+  catch (e) { const t = $("#job-status"); if (t) t.textContent = "Couldn't send the request. Try again."; jobPaint(); }
+}
+function lastChecked() {
+  const ts = D.fixtures.map(f => f.oddset && f.oddset.checked_at).filter(Boolean).sort();
+  return ts.length ? ts[ts.length - 1] : null;
+}
+function reqText() {
+  const lc = lastChecked();
+  const base = lc ? `Oddset prices last checked ${esc(when(lc))}.` : "No Oddset prices checked yet.";
+  if (BET_STATE === "off" || !REQREF) return `${base} Type the price you see on Oddset into the bet slip if it has changed.`;
+  if (!REQ || !REQ.status) return base;
+  if (REQ.status === "waiting") return `Requested ${esc(when(REQ.requested_at))}. Claude checks within ${REQ_WAIT_MIN} minutes (09–22), refreshes the page and sends you a notification.`;
+  if (REQ.status === "checking") return reqStale() ? `${base} The last check got stuck. Press the button to try again.` : `Claude is checking Oddset now…`;
+  if (REQ.status === "done") return `${base}${REQ.summary ? " " + esc(REQ.summary) : ""} Reload the page if the prices look old.`;
+  if (REQ.status === "failed") return `${base} The last check didn't work${REQ.summary ? `: ${esc(REQ.summary)}` : ""}. Try again later.`;
+  return base;
+}
+function reqStale() {   // a check that never finished (e.g. waiting on a permission prompt) shouldn't block the button
+  const t = Date.parse((REQ && (REQ.checking_at || REQ.requested_at)) || 0);
+  return REQ && (REQ.status === "checking" || REQ.status === "waiting") && Date.now() - t > 3 * 36e5;
+}
+function reqPaint() {
+  const t = $("#req-status"), b = $("#req-odds"); if (!t || !b) return;
+  t.innerHTML = reqText();
+  const busy = REQ && (REQ.status === "waiting" || REQ.status === "checking") && !reqStale();
+  b.disabled = BET_STATE !== "ready" || !!busy;
+}
+async function reqOdds() {
+  if (!REQREF) return;
+  $("#req-odds").disabled = true;
+  try { await REQREF.set({ status: "waiting", requested_at: new Date().toISOString() }); }
+  catch (e) { $("#req-status").textContent = "Couldn't send the request. Try again."; $("#req-odds").disabled = false; }
+}
+const clampStake = x => Math.min(STAKE_MAX, Math.max(STAKE_MIN, Math.round(+x || 50)));
+const kr = x => (x < 0 ? "−" : "") + Math.abs(x).toFixed(0) + " kr";
+const kr1 = x => (x < 0 ? "−" : "+") + Math.abs(x).toFixed(1) + " kr";
+const krs = x => (x > 0.5 ? "+" : x < -0.5 ? "−" : "") + Math.abs(x).toFixed(0) + " kr";
+
+function strongList() {
+  const out = [];
+  D.fixtures.filter(notStarted).forEach(f => (f.strong || []).filter(s => s.key !== "sot").forEach(s => out.push({ id: `${f.fpl_id}_${s.key}`, f, s })));
+  return out;
+}
+function legChances(s, rule) {
+  // win / stake-back / lose chances for one pick; a tie in corners or shots on target either
+  // gives the stake back ("void") or loses the bet ("lose"), depending on the market
+  if (s.tie == null) return { w: s.p, v: 0, l: 1 - s.p };
+  if (rule === "lose") return { w: s.p_any, v: 0, l: 1 - s.p_any };
+  return { w: s.p_any, v: s.tie, l: 1 - s.p_any - s.tie };
+}
+
+/* limits: lowering a limit or starting a break works at once; raising a limit or ending a
+   break early waits COOL_HOURS, like a cooling-off period. Nothing is reported anywhere. */
+function effLimits() {
+  const s = LIM || {};
+  const e = { weekly_budget: s.weekly_budget ?? DEF_LIMITS.weekly_budget, monthly_loss_limit: s.monthly_loss_limit ?? DEF_LIMITS.monthly_loss_limit,
+    break_until: s.break_until || null, pending: s.pending || null };
+  const p = e.pending;
+  if (p && Date.now() >= Date.parse(p.effective_at)) {
+    if (p.weekly_budget != null) e.weekly_budget = p.weekly_budget;
+    if (p.monthly_loss_limit != null) e.monthly_loss_limit = p.monthly_loss_limit;
+    if (p.end_break) e.break_until = null;
+    e.pending = null;
+  }
+  return e;
+}
+const onBreak = e => !!(e.break_until && Date.parse(e.break_until) > Date.now());
+const betBreak = () => BET_STATE === "ready" && onBreak(effLimits());
+
+function liveFor(b) {
+  return (D.track.live || []).find(e => (e.fpl_id != null ? e.fpl_id === b.fixture_id : (e.home === b.home && e.away === b.away)));
+}
+function betStatus(b) {
+  if (b.status !== "placed") return "skipped";
+  if (b.manual_result) return b.manual_result;
+  const e = liveFor(b);
+  if (b.key === "result" || b.key === "dc" || b.key === "score") {
+    if (!e || !e.result) return "open";
+    const o = e.result.outcome;
+    if (b.key === "score") return e.result.score === b.score ? "won" : "lost";
+    if (b.key === "result") return ({ [`${b.home} win`]: 0, Draw: 1, [`${b.away} win`]: 2 }[b.pick] === o) ? "won" : "lost";
+    return (b.pick === `${b.home} or draw` ? o <= 1 : o >= 1) ? "won" : "lost";
+  }
+  if (b.key === "other") return "open";   // you mark these won or lost in My bets
+  const s = e && e.result && (e.result.strong || []).find(x => x.key === b.key);
+  let st = s ? (s.status || (s.hit === true ? "won" : s.hit === false ? "lost" : "pending")) : "open";
+  if (st === "void" && b.tie_rule === "lose") st = "lost";
+  return st;   // open | pending | won | lost | void
+}
+const betProfit = (b, st) => (st === "won" ? (b.odds ? b.stake * (b.odds - 1) : 0) : st === "lost" ? -b.stake : 0);
+function weekStart() { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d.getTime(); }
+function monthStart() { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1).getTime(); }
+function betTotals() {
+  const ws = weekStart(), ms = monthStart(), e = effLimits();
+  const T = { week: 0, monthNet: 0, open: 0, allNet: 0, won: 0, lost: 0, voided: 0, placed: 0, skipped: 0, staked: 0, e };
+  Object.values(BETS).forEach(b => {
+    if (b.status !== "placed") { T.skipped++; return; }
+    const st = betStatus(b);
+    T.placed++; T.staked += b.stake;
+    if (Date.parse(b.answered_at) >= ws) T.week += b.stake;
+    if (st === "open" || st === "pending") { T.open += b.stake; return; }
+    const pr = betProfit(b, st);
+    T.allNet += pr;
+    if (Date.parse(b.kickoff) >= ms) T.monthNet += pr;
+    if (st === "won") T.won++; else if (st === "lost") T.lost++; else T.voided++;
+  });
+  T.lossUsed = Math.max(0, -T.monthNet) + T.open;          // money lost this month plus money still riding
+  T.weekLeft = Math.max(0, e.weekly_budget - T.week);
+  T.lossLeft = Math.max(0, e.monthly_loss_limit - T.lossUsed);
+  return T;
+}
+function blockReason(stake) {
+  const T = betTotals();
+  if (onBreak(T.e)) return `You're on a break until ${when(T.e.break_until)}.`;
+  if (T.lossLeft <= 0) return "Monthly loss limit reached. Back on the 1st.";
+  if (T.weekLeft <= 0) return "This week's budget is used up. Back on Monday.";
+  if (stake > T.weekLeft) return `Only ${kr(T.weekLeft)} left of this week's budget.`;
+  if (stake > T.lossLeft) return `Only ${kr(T.lossLeft)} left before your monthly loss limit.`;
+  return "";
+}
+function limitsLine() {
+  if (BET_STATE !== "ready") return BET_STATE === "off"
+    ? (SB ? `<a href="#bets">Sign in on My bets</a> to save your bets, limits and breaks. The numbers work without it.` : "Saving bets works on the published page. Here, only the numbers work.")
+    : BET_STATE === "slow" ? "Can't reach your saved bets yet. The numbers still work." : "Loading your bets and limits…";
+  const T = betTotals();
+  return `This week: <b>${kr(T.week)}</b> of ${kr(T.e.weekly_budget)} staked · This month: <b>${krs(T.monthNet)}</b>${T.open ? `, ${kr(T.open)} in open bets` : ""} · ${kr(T.lossLeft)} left before your loss limit · <a href="#bets">My bets</a>`;
+}
+
+function betSlip() {
+  if (betBreak()) {
+    const e = effLimits();
+    return `<div class="gw-head"><h2>Bet slip</h2></div><div class="card"><p style="margin:0"><b>You're on a break until ${esc(when(e.break_until))}.</b> Strong picks, prices and the bet slip are hidden until then, and no bet notifications are sent. The predictions are still here. <a href="#bets">My bets</a></p></div>`;
+  }
+  const L = strongList();
+  if (!L.length) return "";
+  const stake = clampStake(store.get("stake", 50));
+  const sorted = L.map(x => ({ ...x, st: pickStatus(x.f, x.s) })).sort((a, b) => RANK[a.st] - RANK[b.st] || a.f.kickoff.localeCompare(b.f.kickoff));
+  const top = sorted.filter(x => x.st !== "bad"), poor = sorted.filter(x => x.st === "bad");
+  const sot = D.fixtures.some(f => notStarted(f) && (f.strong || []).some(s => s.key === "sot"));
+  return `<div class="gw-head"><h2>Bet slip</h2><span class="sub">Check the price, pick a stake, place it on Oddset, then tap "I placed this bet"</span></div>
+  <div id="oc">
+    <div class="limits-line" id="oc-limits">${limitsLine()}</div>
+    ${top.map(x => slipCard(x, stake)).join("")}
+    ${poor.length ? `<details class="poor-group"${top.length ? "" : " open"}><summary>✗ ${poor.length} pick${poor.length > 1 ? "s" : ""} not worth it at Oddset's price</summary>${poor.map(x => slipCard(x, stake)).join("")}</details>` : ""}
+    ${sot ? `<p class="small">"More shots on target" picks aren't here: Oddset has no market for which team gets more shots on target, only totals.</p>` : ""}
+    <div class="combo" id="oc-combo"></div>
+    <p class="small">Fair odds = 1 ÷ our chance: the price where a bet breaks even over time. A price counts as good from 5% above that, because our chances can be a few points off. Oddset prices shown are the last ones checked, so make sure they're still the same. I never log in, pay in or bet: you place the bet on Oddset yourself. Not betting advice.</p>
+  </div>`;
+}
+function slipCard({ id, f, s }, stake) {
+  const url = (f.oddset && f.oddset.url) || ODDSET_PL;
+  const pr = oddsetPrice(f, s);
+  const rule = store.get("tie", {})[id] || defaultRule(s);
+  return `<div class="slip" id="slip-${id}" data-id="${id}">
+    <div class="slip-banner"></div>
+    <div class="slip-body">
+      <div class="slip-title"><b>${esc(pickLabel(s))}</b><span class="small">${esc(f.home)} v ${esc(f.away)} · ${esc(when(f.kickoff))}</span></div>
+      <div class="slip-facts">Our chance <b class="oc-p">${pc(s.p)}</b> · fair odds <b class="oc-fair"></b> · good from <b class="oc-min"></b>${s.early ? " · no bookmaker odds in the model yet, may change" : ""}</div>
+      <div class="fields">
+        <label class="fld">Oddset odds${pr && f.oddset.checked_at ? ` <small>checked ${esc(when(f.oddset.checked_at))}</small>` : ""}
+          <input type="number" class="oc-odds" min="1.01" step="0.01" inputmode="decimal" placeholder="type"${pr ? ` value="${pr.toFixed(2)}"` : ""}></label>
+        <div class="fld">Stake<div class="chips">${[20, 50, 100].map(v => `<button type="button" class="chip-btn${v === stake ? " on" : ""}" data-stake="${v}">${v} kr</button>`).join("")}<input type="number" class="oc-stake" min="${STAKE_MIN}" max="${STAKE_MAX}" step="5" inputmode="numeric" value="${stake}" aria-label="Other stake in kr"></div></div>
+        ${s.tie != null ? `<label class="fld">If ${s.key === "corners" ? "corners" : "shots on target"} are level
+          <select class="oc-tie"><option value="lose"${rule === "lose" ? " selected" : ""}>Bet loses (Oddset)</option><option value="void"${rule === "void" ? " selected" : ""}>Stake back</option></select></label>` : ""}
+      </div>
+      <div class="outcome"></div>
+      <div class="slip-actions"><a class="btn primary" href="${esc(url)}" target="_blank" rel="noopener">Open on Oddset ↗</a><span class="slip-yn"></span></div>
+      <details class="how"><summary>How to find it on Oddset</summary>${routeHtml(f, s, stake)}</details>
+      <label class="small combo-tick"><input type="checkbox" class="oc-pick"> Add to a combined bet</label>
+    </div>
+  </div>`;
+}
+function ocRow(el) {
+  const it = strongList().find(x => x.id === el.dataset.id); if (!it) return null;
+  const tieSel = el.querySelector(".oc-tie"), rule = tieSel ? tieSel.value : "void";
+  const ch = legChances(it.s, rule);
+  const fair = (ch.w + ch.l) / ch.w;          // break-even odds
+  const need = minOdds(fair);
+  el.querySelector(".oc-p").textContent = pc(ch.w / (ch.w + ch.l));
+  el.querySelector(".oc-fair").textContent = fair.toFixed(2);
+  el.querySelector(".oc-min").textContent = need;
+  const m2 = el.querySelector(".oc-min2"); if (m2) m2.textContent = need;
+  const stake = +el.querySelector(".oc-stake").value;
+  const stakeOk = stake >= STAKE_MIN && stake <= STAKE_MAX;
+  const sk = el.querySelector(".oc-stk"); if (sk) sk.textContent = stakeOk ? `${stake} kr` : `${STAKE_MIN}–${STAKE_MAX} kr`;
+  const o = parseFloat(String(el.querySelector(".oc-odds").value).replace(",", "."));
+  const st = statusOf(o > 1 ? o : null, fair);
+  el.classList.remove("st-good", "st-meh", "st-bad", "st-none"); el.classList.add("st-" + st);
+  const os = o > 1 ? o.toFixed(2) : "";
+  el.querySelector(".slip-banner").innerHTML = {
+    good: `<b>✓ Good bet.</b> Oddset's ${os} is above the ${need} it needs.`,
+    meh: `<b>≈ Borderline.</b> ${os} is only just above fair odds (${fair.toFixed(2)}). Good from ${need}.`,
+    bad: `<b>✗ Not worth it.</b> ${os} is below fair odds (${fair.toFixed(2)}), so it loses money over time. Good from ${need}.`,
+    none: `<b>? Check the price.</b> Type the odds Oddset shows. Good from ${need}.`,
+  }[st];
+  const out = el.querySelector(".outcome");
+  if (!stakeOk) out.innerHTML = `<div><span>Stake</span><b class="bad">${STAKE_MIN}–${STAKE_MAX} kr</b><small>your limit per bet</small></div>`;
+  else if (!(o > 1)) out.innerHTML = "";
+  else {
+    const ev = stake * (ch.w * (o - 1) - ch.l);
+    out.innerHTML = `<div class="out-win"><span>If it wins</span><b>+${kr(stake * (o - 1))}</b><small>${pc(ch.w)} chance</small></div>
+      <div class="out-lose"><span>If it loses</span><b>−${kr(stake)}</b><small>${pc(ch.l)} chance</small></div>
+      ${ch.v ? `<div><span>If level</span><b>stake back</b><small>${pc(ch.v)} chance</small></div>` : ""}
+      <div><span>On average</span><b>${kr1(ev)}</b><small>per bet</small></div>`;
+  }
+  return { it, ch, o: o > 1 ? o : null, fair, stake: stakeOk ? stake : null, rule, st };
+}
+function ynHtml(el, r) {
+  if (BET_STATE !== "ready") return BET_STATE === "off" ? `<span class="small">Saving works on the published page.</span>` : "";
+  const b = BETS[el.dataset.id];
+  if (b) {
+    const st = betStatus(b);
+    const txt = b.status === "placed" ? `✓ You placed ${kr(b.stake)} at ${(+b.odds).toFixed(2)}${st === "won" ? ` · <span class="st-won">won ${krs(betProfit(b, st))}</span>` : st === "lost" ? ` · <span class="st-lost">lost</span>` : ""}` : "Skipped.";
+    return `<span class="small">${txt}</span>${notStarted(r.it.f) ? ` <button class="btn small" data-undo>Undo</button>` : ""}`;
+  }
+  const why = r.stake ? blockReason(r.stake) : "";
+  const yesOff = !r.o || !r.stake || !!why;
+  return `<button class="btn yes" data-yes${yesOff ? " disabled" : ""}>✓ I placed this bet</button><button class="btn" data-no>Skip</button>
+    ${why ? `<span class="small">${esc(why)}</span>` : ""}`;
+}
+function paintStatuses() {
+  document.querySelectorAll("[data-sid]").forEach(el => {
+    const [fid, key] = el.dataset.sid.split("_");
+    const f = D.fixtures.find(x => String(x.fpl_id) === fid), s = f && (f.strong || []).find(x => x.key === key);
+    if (f && s) { const tmp = document.createElement("div"); tmp.innerHTML = overviewRow(f, s); el.replaceWith(tmp.firstElementChild); }
+  });
+  document.querySelectorAll("details.fx[data-fid]").forEach(d => {
+    const f = D.fixtures.find(x => String(x.fpl_id) === d.dataset.fid); if (!f) return;
+    const ms = matchStatus(f);
+    d.classList.remove("st-good", "st-meh", "st-bad", "st-none", "st-na"); if (ms) d.classList.add("st-" + ms);
+    const b = d.querySelector(".mbadge"); if (b) b.innerHTML = ms ? badgeHtml(ms) : "";
+  });
+}
+function ocRefresh() {
+  const box = $("#oc"); if (!box) { paintStatuses(); return; }
+  const lim = $("#oc-limits"); if (lim) lim.innerHTML = limitsLine();
+  const odds = store.get("odds", {}), ties = store.get("tie", {}), rows = [];
+  box.querySelectorAll(".slip[data-id]").forEach(el => {
+    const r = ocRow(el); if (!r) return;
+    const v = el.querySelector(".oc-odds").value; if (v) odds[el.dataset.id] = v; else delete odds[el.dataset.id];
+    if (el.querySelector(".oc-tie")) ties[el.dataset.id] = r.rule;
+    const yn = el.querySelector(".slip-yn"), h = ynHtml(el, r);
+    if (yn.dataset.h !== h) { yn.innerHTML = h; yn.dataset.h = h; }
+    el.classList.toggle("done", !!BETS[el.dataset.id]);
+    if (el.querySelector(".oc-pick").checked) rows.push(r);
+  });
+  store.set("odds", odds); store.set("tie", ties);
+  paintStatuses();
+  const cb = $("#oc-combo");
+  if (rows.length < 2) { cb.innerHTML = autoAdvice(); return; }
+  const ids = rows.map(r => r.it.f.fpl_id);
+  if (new Set(ids).size !== ids.length) { cb.innerHTML = "<b>Picks from the same match depend on each other</b> (a team that wins usually has more corners too), so they can't be combined fairly. Combine picks from different matches only."; return; }
+  if (rows.some(r => !r.o)) { cb.innerHTML = "Type the odds for every ticked pick to check the combined bet."; return; }
+  const stake = clampStake(rows[0].stake || 50);
+  const mult = rows.map(r => r.ch.w * r.o + r.ch.v);
+  const pNoLoss = rows.reduce((a, r) => a * (r.ch.w + r.ch.v), 1);
+  const pAll = rows.reduce((a, r) => a * r.ch.w, 1);
+  const oAll = rows.reduce((a, r) => a * r.o, 1);
+  const evCombo = stake * (mult.reduce((a, x) => a * x, 1) - 1);
+  const evSingles = rows.reduce((a, r, i) => a + (stake / rows.length) * (mult[i] - 1), 0);
+  const sameTime = new Set(rows.map(r => r.it.f.kickoff)).size === 1;
+  const allAbove = rows.every(r => r.o >= r.fair * MARGIN);
+  const verdict = !allAbove
+    ? `<b class="bad">✗ Bet them as singles.</b> At least one pick isn't a good price, and combining multiplies that loss.`
+    : evCombo > evSingles
+      ? `<b class="good">✓ The combined bet has the better average</b>, but it loses the whole stake ${pc(1 - pNoLoss)} of the time. Singles are steadier.`
+      : `<b class="meh">≈ Singles have the better average.</b>`;
+  cb.innerHTML = `<b>Combined bet, ${rows.length} picks, ${stake} kr:</b> odds ${oAll.toFixed(2)}. Wins +${kr(stake * (oAll - 1))} if every pick comes in (${pc(pAll)} chance), loses ${kr(stake)} ${pc(1 - pNoLoss)} of the time. On average <b>${kr1(evCombo)}</b>; as ${rows.length} singles <b>${kr1(evSingles)}</b>.
+    <br>${verdict}${sameTime ? "" : " These matches kick off at different times."} "I placed this bet" saves single bets; log a combined bet in My bets.`;
+}
+function autoAdvice() {
+  const good = {};
+  document.querySelectorAll("#oc .slip[data-id]").forEach(el => {
+    const r = ocRow(el);
+    if (!r || !r.o || !r.stake || BETS[el.dataset.id] || r.st !== "good") return;
+    const edge = r.ch.w * r.o + r.ch.v - 1, k = r.it.f.fpl_id;
+    if (!good[k] || edge > good[k].edge) good[k] = { r, edge };
+  });
+  const g = Object.values(good);
+  if (!g.length) return `<b>Single or combined?</b> When picks have a good price, the best choice shows up here.`;
+  const names = g.map(x => `${esc(pickLabel(x.r.it.s))} (${x.r.o.toFixed(2)})`).join(", ");
+  if (g.length === 1) return `<b>Suggestion: a single bet</b> on ${names}.`;
+  const byTime = {};
+  g.forEach(x => (byTime[x.r.it.f.kickoff] ||= []).push(x));
+  const same = Object.values(byTime).filter(a => a.length > 1);
+  return `<b>Suggestion: singles</b> on ${names}. ${same.length ? `${same[0].map(x => esc(pickLabel(x.r.it.s))).join(" + ")} start at the same time: tick "Add to a combined bet" on them to compare.` : "They start at different times, so keep them as singles."}`;
+}
+async function ocAnswer(el, placed) {
+  const r = ocRow(el); if (!r || !BETDB) return;
+  const yn = el.querySelector(".slip-yn");
+  if (placed) {
+    if (!r.o || !r.stake) return;
+    const why = blockReason(r.stake); if (why) { ocRefresh(); return; }
+  }
+  yn.querySelectorAll("button").forEach(b => { b.disabled = true; });
+  const { f, s } = r.it;
+  const doc = { fixture_id: f.fpl_id, key: s.key, gw: f.gw, home: f.home, away: f.away, kickoff: f.kickoff, pick: s.pick, market: s.market,
+    side: s.side || null, p: +(r.ch.w / (r.ch.w + r.ch.l)).toFixed(3), fair: +r.fair.toFixed(2), tie_rule: s.tie != null ? r.rule : null,
+    status: placed ? "placed" : "skipped", stake: placed ? r.stake : 0, odds: placed ? r.o : null, answered_at: new Date().toISOString() };
+  try { await BETDB.bets.doc(el.dataset.id).set(doc); }
+  catch (e) { yn.dataset.h = ""; yn.innerHTML = `<span class="small bad">Couldn't save (${esc(e && e.code || "error")}). Try again.</span>`; setTimeout(ocRefresh, 2500); }
+}
+function ocWire() {
+  const rb = $("#req-odds"); if (rb) { rb.addEventListener("click", reqOdds); reqPaint(); }
+  const ov = $("#overview");
+  if (ov) ov.addEventListener("click", e => {
+    const a = e.target.closest("[data-slip]"); if (!a) return;
+    e.preventDefault();
+    const el = document.getElementById("slip-" + a.dataset.slip); if (!el) return;
+    const grp = el.closest("details"); if (grp) grp.open = true;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  const box = $("#oc"); if (!box) { paintStatuses(); return; }
+  const odds = store.get("odds", {});
+  box.querySelectorAll(".slip[data-id]").forEach(el => { if (odds[el.dataset.id]) el.querySelector(".oc-odds").value = odds[el.dataset.id]; });
+  box.addEventListener("input", e => {
+    if (e.target.classList.contains("oc-stake")) {
+      const el = e.target.closest(".slip");
+      el.querySelectorAll("[data-stake]").forEach(c => c.classList.toggle("on", c.dataset.stake === e.target.value));
+      if (e.target.value) store.set("stake", clampStake(e.target.value));
+    }
+    ocRefresh();
+  });
+  box.addEventListener("change", ocRefresh);
+  box.addEventListener("click", async e => {
+    const el = e.target.closest(".slip[data-id]"); if (!el) return;
+    const cp = e.target.closest("[data-copy]");
+    if (cp) {
+      let ok = false;
+      try { await navigator.clipboard.writeText(cp.dataset.copy); ok = true; } catch (err) { /* clipboard blocked in this view */ }
+      cp.textContent = ok ? "Copied" : "Type it";
+      setTimeout(() => { cp.textContent = "Copy"; }, 1500);
+      return;
+    }
+    const chip = e.target.closest("[data-stake]");
+    if (chip) {
+      el.querySelector(".oc-stake").value = chip.dataset.stake;
+      el.querySelectorAll("[data-stake]").forEach(c => c.classList.toggle("on", c === chip));
+      store.set("stake", +chip.dataset.stake); ocRefresh(); return;
+    }
+    if (e.target.closest("[data-yes]")) await ocAnswer(el, true);
+    else if (e.target.closest("[data-no]")) await ocAnswer(el, false);
+    else if (e.target.closest("[data-undo]") && BETDB) {
+      e.target.disabled = true;
+      try { await BETDB.bets.doc(el.dataset.id).delete(); } catch (err) { e.target.disabled = false; }
+    }
+  });
+  ocRefresh();
+}
+
+/* ---------- my bets: totals, limits, breaks, history ---------- */
+function renderBets() {
+  const el = $("#v-bets"); if (!el) return;
+  if (BET_STATE !== "ready") {
+    el.innerHTML = `<div class="gw-head"><h2>My bets</h2></div>${SB && !SB_USER && BET_STATE !== "loading" ? loginCard() : `<div class="card"><p class="small" style="margin:0">${limitsLine()}</p></div>`}${toolsCard()}`;
+    wireTools(el); wireLogin(el);
+    return;
+  }
+  const T = betTotals(), e = T.e, P = e.pending;
+  const brk = onBreak(e);
+  const rows = Object.entries(BETS).map(([id, b]) => ({ id, b, st: betStatus(b) })).sort((a, z) => String(z.b.kickoff).localeCompare(String(a.b.kickoff)));
+  const coolDate = new Date(Date.now() + COOL_HOURS * 36e5).toISOString();
+  el.innerHTML = `<div class="gw-head"><h2>My bets</h2><span class="sub">Saved only for you. Nothing here is reported anywhere.</span></div>
+  <div class="tiles">
+    <div class="tile"><div class="k">This week staked</div><div class="v">${kr(T.week)}</div><div class="s">of your ${kr(e.weekly_budget)} weekly budget · resets Monday</div></div>
+    <div class="tile"><div class="k">This month</div><div class="v">${krs(T.monthNet)}</div><div class="s">${kr(T.open)} in open bets · ${kr(T.lossLeft)} left before your ${kr(e.monthly_loss_limit)} loss limit</div></div>
+    <div class="tile"><div class="k">All time</div><div class="v">${krs(T.allNet)}</div><div class="s">${T.placed} bets, ${kr(T.staked)} staked · ${T.won} won, ${T.lost} lost${T.voided ? `, ${T.voided} void` : ""}</div></div>
+    <div class="tile"><div class="k">Status</div><div class="v" style="font-size:24px">${brk ? "On a break" : T.lossLeft <= 0 ? "Loss limit hit" : T.weekLeft <= 0 ? "Budget used" : "Active"}</div><div class="s">${brk ? `until ${esc(when(e.break_until))}` : `${STAKE_MIN}–${STAKE_MAX} kr per bet`}</div></div>
+  </div>
+  <div class="card"><h2>Take a break</h2>
+    ${brk ? `<p><b>You're on a break until ${esc(when(e.break_until))}.</b> Strong picks, fair odds and the bet slip are hidden, and no bet notifications are sent.</p>
+      ${P && P.end_break ? `<p class="small">Break ends early on ${esc(when(P.effective_at))}. <button class="btn small" data-act="cancel-pending">Keep the break</button></p>`
+        : `<button class="btn" data-act="end-break">End the break early</button> <span class="small">Takes effect after ${COOL_HOURS} hours (${esc(when(coolDate))}), so it isn't a snap decision.</span>`}`
+    : `<p class="small">Pauses the betting parts of this page and the bet notifications. Starts at once; you come back by yourself when it ends.</p>
+      <div class="slip-yn"><button class="btn" data-brk="1">24 hours</button><button class="btn" data-brk="7">1 week</button><button class="btn" data-brk="30">1 month</button><button class="btn" data-brk="90">3 months</button></div>`}
+    <p class="small">This only pauses this page. For a break on Oddset itself, Danske Spil has its own 24-hour pause, temporary self-exclusion and deposit limits in your account settings. Those are Danske Spil's, not ROFUS, and they stop betting there too.</p>
+  </div>
+  <div class="card"><h2>Limits</h2>
+    <div class="formrow"><label>Weekly budget (total staked) <input type="number" id="lim-week" min="${STAKE_MIN}" step="10" value="${e.weekly_budget}" inputmode="numeric"> kr</label></div>
+    <div class="formrow"><label>Monthly loss limit <input type="number" id="lim-loss" min="${STAKE_MIN}" step="10" value="${e.monthly_loss_limit}" inputmode="numeric"> kr</label></div>
+    <div class="formrow"><button class="btn" data-act="save-limits">Save limits</button><span class="small" id="lim-msg"></span></div>
+    ${P && (P.weekly_budget != null || P.monthly_loss_limit != null) ? `<p class="small">Waiting: ${P.weekly_budget != null ? `weekly budget ${kr(P.weekly_budget)}` : ""}${P.weekly_budget != null && P.monthly_loss_limit != null ? ", " : ""}${P.monthly_loss_limit != null ? `loss limit ${kr(P.monthly_loss_limit)}` : ""} from ${esc(when(P.effective_at))}. <button class="btn small" data-act="cancel-pending">Cancel</button></p>` : ""}
+    <p class="small">Lowering a limit works at once. Raising one waits ${COOL_HOURS} hours. When a limit is reached, the Yes button stops working and the notifications stop until the week or month resets. The loss limit counts this month's net loss plus money in open bets.</p>
+  </div>
+  ${toolsCard()}
+  <div class="card"><h2>Log a bet you placed</h2>
+    <p class="small">For any bet you placed on Oddset that isn't on the bet slip, so your budget and loss limit stay right.</p>
+    <div class="formrow"><label>Match <select id="lb-match">${D.fixtures.map(f => `<option value="${f.fpl_id}">${esc(f.home)} v ${esc(f.away)} · ${esc(when(f.kickoff))}</option>`).join("")}</select></label></div>
+    <div class="formrow"><label>Bet <select id="lb-type"><option value="home">Home win</option><option value="draw">Draw</option><option value="away">Away win</option><option value="score">Exact score</option><option value="other">Something else</option></select></label>
+      <label id="lb-score-l" hidden>Score <input id="lb-score" placeholder="2-1" style="width:70px"></label>
+      <label id="lb-other-l" hidden>What <input id="lb-other" class="wide" placeholder="e.g. Over 2.5 goals"></label></div>
+    <div class="formrow"><label>Odds <input type="number" id="lb-odds" step="0.01" min="1.01" inputmode="decimal"></label>
+      <span class="chips">${[20, 50, 100].map(v => `<button type="button" class="chip-btn" data-lbstake="${v}">${v} kr</button>`).join("")}</span>
+      <label>Stake <input type="number" id="lb-stake" min="1" step="5" value="20" inputmode="numeric"> kr</label></div>
+    <div class="formrow"><button class="btn yes" data-act="log-bet">Save bet</button><span class="small" id="lb-msg"></span></div>
+  </div>
+  <div class="card"><h2>History</h2>${rows.length ? `<div class="scroll"><table><thead><tr><th>Match</th><th>Pick</th><th class="r">Odds</th><th class="r">Stake</th><th>Result</th><th class="r">Profit</th></tr></thead><tbody>
+    ${rows.map(({ id, b, st }) => `<tr><td>${esc(b.home)} v ${esc(b.away)}<span class="small" style="display:block">${esc(when(b.kickoff))}</span></td><td>${esc(b.pick)}<span class="small" style="display:block">${esc(b.market)}</span></td>
+      <td class="r">${b.odds ? (+b.odds).toFixed(2) : b.status === "placed" ? `<input type="number" step="0.01" min="1.01" inputmode="decimal" placeholder="odds?" style="width:72px" data-setodds="${esc(id)}" aria-label="Odds you got">` : "–"}</td><td class="r">${b.status === "placed" ? kr(b.stake) : "–"}</td>
+      <td class="st-${st}">${{ won: "Won", lost: "Lost", void: "Void (stake back)", open: "Not played yet", pending: "Waiting for stats", skipped: "Skipped" }[st]}${b.key === "other" && b.status === "placed" && Date.parse(b.kickoff) < Date.now() ? ` <span class="chips"><button class="chip-btn" data-mark="won" data-id="${esc(id)}">Won</button><button class="chip-btn" data-mark="lost" data-id="${esc(id)}">Lost</button>${b.manual_result ? `<button class="chip-btn" data-mark="" data-id="${esc(id)}">Undo</button>` : ""}</span>` : ""}</td>
+      <td class="r">${b.status === "placed" && st !== "open" && st !== "pending" ? krs(betProfit(b, st)) : "–"}</td></tr>`).join("")}
+    </tbody></table></div>` : `<p class="small">No bets yet. When you place a strong pick on Oddset, tap "Yes, I placed it" on the bet slip.</p>`}
+    <p class="small">Results come from the page's refresh after each match; corners and shots on target need the stats file, which can take a day or two.</p></div>`;
+  el.querySelectorAll("[data-brk]").forEach(b => b.addEventListener("click", () => saveLimits({ break_until: new Date(Date.now() + (+b.dataset.brk) * 864e5).toISOString(), pending: null })));
+  const act = (name, fn) => { const b = el.querySelector(`[data-act="${name}"]`); if (b) b.addEventListener("click", fn); };
+  act("end-break", () => saveLimits({ pending: { ...(effLimits().pending || {}), end_break: true, effective_at: new Date(Date.now() + COOL_HOURS * 36e5).toISOString() } }));
+  act("cancel-pending", () => saveLimits({ pending: null }));
+  wireTools(el);
+  const typeSel = $("#lb-type");
+  if (typeSel) typeSel.addEventListener("change", () => { $("#lb-score-l").hidden = typeSel.value !== "score"; $("#lb-other-l").hidden = typeSel.value !== "other"; });
+  el.querySelectorAll("[data-lbstake]").forEach(c => c.addEventListener("click", () => { $("#lb-stake").value = c.dataset.lbstake; }));
+  act("log-bet", logBet);
+  el.querySelectorAll("[data-setodds]").forEach(inp => inp.addEventListener("change", async () => {
+    const o = parseFloat(String(inp.value).replace(",", ".")); if (!(o > 1) || !BETDB) return;
+    inp.disabled = true;
+    try { await BETDB.bets.doc(inp.dataset.setodds).update({ odds: +o.toFixed(2) }); } catch (e) { inp.disabled = false; }
+  }));
+  el.querySelectorAll("[data-mark]").forEach(btn => btn.addEventListener("click", async () => {
+    if (!BETDB) return; btn.disabled = true;
+    try { await BETDB.bets.doc(btn.dataset.id).update({ manual_result: btn.dataset.mark || null }); } catch (e) { btn.disabled = false; }
+  }));
+  act("save-limits", () => {
+    const w = Math.round(+$("#lim-week").value), l = Math.round(+$("#lim-loss").value), cur = effLimits();
+    if (!(w >= STAKE_MIN) || !(l >= STAKE_MIN)) { $("#lim-msg").textContent = `Limits must be at least ${STAKE_MIN} kr.`; return; }
+    const now = {}, later = {};
+    (w <= cur.weekly_budget ? now : later).weekly_budget = w;
+    (l <= cur.monthly_loss_limit ? now : later).monthly_loss_limit = l;
+    const patch = { ...now };
+    if (Object.keys(later).length) patch.pending = { ...later, effective_at: new Date(Date.now() + COOL_HOURS * 36e5).toISOString() };
+    else if (cur.pending && !cur.pending.end_break) patch.pending = null;
+    saveLimits(patch);
+  });
+}
+async function logBet() {
+  const msg = $("#lb-msg");
+  const f = D.fixtures.find(x => String(x.fpl_id) === $("#lb-match").value);
+  const type = $("#lb-type").value;
+  const odds = parseFloat(String($("#lb-odds").value).replace(",", "."));
+  const stake = Math.round(+$("#lb-stake").value);
+  if (!f || !BETDB) return;
+  if (!(stake > 0)) { msg.textContent = "Type the stake."; return; }
+  let key = "result", pick = "", score = null;
+  if (type === "home") pick = `${f.home} win`;
+  else if (type === "away") pick = `${f.away} win`;
+  else if (type === "draw") pick = "Draw";
+  else if (type === "score") {
+    const m = String($("#lb-score").value).trim().match(/^(\d{1,2})\s*[-–:]\s*(\d{1,2})$/);
+    if (!m) { msg.textContent = "Type the score like 2-1 (home first)."; return; }
+    key = "score"; score = `${+m[1]}-${+m[2]}`; pick = `Exact score ${score}`;
+  } else { key = "other"; pick = String($("#lb-other").value).trim().slice(0, 80) || "Other bet"; }
+  const warn = blockReason(Math.min(stake, STAKE_MAX));
+  const doc = { fixture_id: f.fpl_id, key, gw: f.gw, home: f.home, away: f.away, kickoff: f.kickoff, pick, market: { result: "Result", score: "Exact score", other: "Other" }[key],
+    score, status: "placed", stake, odds: odds > 1 ? +odds.toFixed(2) : null, logged: true, answered_at: new Date().toISOString() };
+  try {
+    await BETDB.bets.doc(`${f.fpl_id}_m${Date.now().toString(36)}`).set(doc);
+    msg.textContent = `Saved.${stake > STAKE_MAX ? ` That's above your ${STAKE_MAX} kr per-bet limit.` : ""}${warn ? " " + warn : ""}`;
+  } catch (e) { msg.textContent = "Couldn't save. Try again."; }
+}
+function toolsCard() {
+  return `<div class="card"><h2>Page tools</h2>
+    <p class="small" style="margin-top:0">These ask the cloud job (GitHub Actions) to run the predictor's scripts. Your PC can be off.</p>
+    <div class="slip-yn">
+      <button type="button" class="btn" data-job="refresh">↻ Refresh predictions</button>
+      <button type="button" class="btn" data-job="test_notify">🔔 Send test notification</button>
+    </div>
+    <p class="small" id="job-status">${jobText()}</p>
+    <p class="small">Refresh downloads the latest results, team news and odds, rebuilds the predictions and republishes this page. The test sends one notification to your phone through ntfy.</p>
+    ${SB_USER ? `<p class="small">Signed in as ${esc(SB_USER.email || "you")}. <button type="button" class="btn small" id="sign-out">Sign out</button></p>` : ""}</div>`;
+}
+function wireTools(el) {
+  el.querySelectorAll("[data-job]").forEach(b => b.addEventListener("click", () => requestJob(b.dataset.job)));
+  const so = el.querySelector("#sign-out"); if (so) so.addEventListener("click", async () => { await SB.auth.signOut(); location.reload(); });
+  jobPaint();
+}
+let limWriting = false;
+async function saveLimits(patch) {
+  if (!BETDB || limWriting) return;
+  limWriting = true;
+  const cur = effLimits();   // fold in anything whose waiting time has passed
+  const doc = { weekly_budget: cur.weekly_budget, monthly_loss_limit: cur.monthly_loss_limit, break_until: cur.break_until, pending: cur.pending, ...patch, updated_at: new Date().toISOString() };
+  try { await BETDB.limRef.set(doc); }
+  catch (e) { const m = $("#lim-msg"); if (m) m.textContent = "Couldn't save. Try again."; }
+  finally { limWriting = false; }
+}
+function betsChanged() {
+  reqPaint();
+  const brk = betBreak();
+  if (brk !== lastBreak) { lastBreak = brk; renderFixtures(); } else ocRefresh();
+  renderBets();
+}
+async function initBets() {
+  const use = window.claude && typeof window.claude.use === "function";
+  if (!use) { BET_STATE = "off"; betsChanged(); return; }
+  let user = null, db = null;
+  try { [user, db] = await Promise.all([window.claude.use("user"), window.claude.use("db")]); } catch (e) { /* treated as unavailable */ }
+  const uid = user ? await user.id() : null;
+  if (!db || !uid) { BET_STATE = "off"; betsChanged(); return; }
+  const limRef = db.doc(`data/users/${uid}/limits`);
+  REQREF = db.doc(`data/users/${uid}/odds_request`);
+  JOBREF = db.doc(`data/users/${uid}/job`);
+  JOBREF.onSnapshot(snap => { JOB = snap.exists ? snap.data() : null; jobPaint(); }, () => { JOBREF = null; jobPaint(); });
+  REQREF.onSnapshot(snap => { REQ = snap.exists ? snap.data() : null; reqPaint(); }, () => { REQREF = null; reqPaint(); });
+  BETDB = { limRef, bets: limRef.collection("bets") };
+  let gotL = false, gotB = false;
+  const timer = setTimeout(() => { if (BET_STATE === "loading") { BET_STATE = "slow"; betsChanged(); } }, 10000);
+  const ready = () => { if (gotL && gotB && BET_STATE !== "off") { clearTimeout(timer); BET_STATE = "ready"; betsChanged(); } };
+  const fail = () => { clearTimeout(timer); BET_STATE = "off"; betsChanged(); };
+  limRef.onSnapshot(snap => { LIM = snap.exists ? snap.data() : null; if (!snap.metadata.fromCache) gotL = true; ready(); }, fail);
+  BETDB.bets.onSnapshot(q => { BETS = Object.fromEntries(q.docs.map(d => [d.id, d.data()])); if (!q.metadata.fromCache) gotB = true; ready(); }, fail);
+}
+
+function renderFixtures() {
+  const el = $("#v-fixtures");
+  let h = strongCard() + betSlip();
+  const byGw = {};
+  D.fixtures.forEach(f => (byGw[f.gw] ||= []).push(f));
+  Object.keys(byGw).sort((a, b) => a - b).forEach((gw, idx) => {
+    const fs = byGw[gw];
+    h += `<div class="gw-head"><h2>Gameweek ${gw}${+gw === D.current_gw ? " · still to play" : ""}</h2><span class="sub">${fs.length} matches · tap a match for the evidence</span></div>`;
+    let lastDay = "";
+    fs.forEach(f => {
+      const dk = dayKey(f.kickoff);
+      if (dk !== lastDay) { h += `<div class="day">${dk}</div>`; lastDay = dk; }
+      h += fixtureRow(f);
+    });
+    if (idx === 0) h += playedStrip();
+  });
+  el.innerHTML = h;
+  ocWire();
+  el.querySelectorAll("details.fx").forEach(d => d.addEventListener("toggle", () => {
+    if (d.open && !d.dataset.done) {
+      const f = D.fixtures.find(x => "m" + x.fpl_id === d.id);
+      d.querySelector(".sheet").innerHTML = sheet(f);
+      const box = d.querySelector(".sqwrap");
+      if (box) { box.addEventListener("change", () => lineupUpdate(box, f)); lineupUpdate(box, f); }
+      d.dataset.done = 1;
+    }
+  }));
+  el.querySelectorAll("a[data-open]").forEach(a => a.addEventListener("click", e => {
+    e.preventDefault();
+    const d = document.getElementById(a.dataset.open);
+    if (d) { d.open = true; d.scrollIntoView({ behavior: "smooth", block: "start" }); }
+  }));
+  const first = el.querySelector("details.fx");
+  if (first) first.open = true;
+}
+
+/* ------------------------------------------------------------------ quick picks */
+function renderPicks() {
+  const markets = ["Result", "Double chance", "Goals 2.5", "Both teams score", "Half-time", "Likeliest scorer", "Shots on target 8.5", "More shots on target", "Corners 9.5", "More corners", "Cards 3.5"];
+  const edge = {};
+  (D.track.markets_summary || []).forEach(r => { edge[r.key] = hasEdge(r); });
+  if (D.track.scorers_summary) edge.scorer = hasEdge(D.track.scorers_summary);
+  const keyOf = { "Goals 2.5": "over25", "Both teams score": "btts", "Half-time": "ht", "Corners 9.5": "corners95", "More corners": "more_corners", "Cards 3.5": "cards35",
+    "Shots on target 8.5": "sot85", "More shots on target": "more_sot", "Likeliest scorer": "scorer" };
+  const best = new Set((D.track.strong_record || []).map(r => r.market));
+  let h = `<div class="gw-head"><h2>Quick picks</h2><span class="sub">The model's call in each market for every match, with its chance. ✓ = best-read market. Shaded = a strong pick.</span></div>
+  <div class="card scroll"><table class="picks-table"><thead><tr><th>Match</th>${markets.map(m => `<th>${m}${best.has(m) ? " ✓" : ""}${keyOf[m] && edge[keyOf[m]] === false ? " *" : ""}</th>`).join("")}</tr></thead><tbody>`;
+  D.fixtures.forEach(f => {
+    const by = Object.fromEntries(f.picks.map(p => [p.market, p]));
+    const strongM = new Set((f.strong || []).map(s => s.market));
+    h += `<tr><td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b><span class="pp">GW${f.gw} · ${when(f.kickoff)}</span></td>
+      ${markets.map(m => { const p = by[m]; return p ? `<td class="${strongM.has(m) ? "strong" : ""}">${esc(p.pick)}<span class="pp">${pc(p.p)}</span></td>` : "<td>–</td>"; }).join("")}</tr>`;
+  });
+  h += `</tbody></table></div><p class="small">✓ Best-read markets: the result, favourite-or-draw, more shots on target and more corners. Above their cut-offs, these calls came in 67–89% of the time last season (see Track record). For "more corners" and "more shots on target", the chance shown here counts a tie as a miss. A strong pick ignores the tie, which would void it.</p>
+  <p class="small">* No proven edge yet in this market: in the backtest the model did no better than a simple base-rate guess. Open a match on the Fixtures tab for every line (goals, corners, cards, half-time/full-time, clean sheets and more).</p>`;
+  $("#v-picks").innerHTML = h;
+}
+
+/* ------------------------------------------------------------------ record */
+function renderRecord() {
+  const S = D.track.backtest_summary, el = $("#v-record");
+  const live = D.track.live, pend = D.track.live_pending || [];
+  const ls = D.track.live_summary;
+  const P = (a, b) => (b ? Math.round((100 * a) / b) + "%" : "–");
+  let h = `<div class="gw-head"><h2>How has it done?</h2><span class="sub">Every game this season, predicted using only data from before that gameweek</span></div>
+  <div class="tiles">
+    <div class="tile"><div class="k">Right result (1·X·2)</div><div class="v">${P(S.correct, S.n)}</div><div class="s">${S.correct} of ${S.n} games with the blend. Model alone: ${S.model_correct}. Bookmakers: ${S.market_correct}. Always picking the home team: ${S.always_home_correct}.</div></div>
+    <div class="tile"><div class="k">Safer call came in</div><div class="v">${P(S.safe_hits, S.safe_n)}</div><div class="s">${S.safe_hits} of ${S.safe_n} games where we gave a "win or draw" call.</div></div>
+    <div class="tile"><div class="k">Exact score</div><div class="v">${P(S.exact, S.n)}</div><div class="s">${S.exact} of ${S.n} with our call. Real score in our top 3: ${S.in_top3} (${P(S.in_top3, S.n)}).</div></div>
+    <div class="tile"><div class="k">Probability score (RPS)</div><div class="v">${S.rps.toFixed(3)}</div><div class="s">Lower is better. Model alone: ${S.model_rps.toFixed(3)}. Bookmakers: ${S.market_rps.toFixed(3)}. Measures how good the percentages were, not just the picks.</div></div>
+  </div>
+  <div class="card"><h2>Results called right, by gameweek</h2>${gwChart()}
+    <p class="small">Backtest: the model is refitted before each gameweek with only earlier results. Team news is not included here, because past injury lists aren't archived in the free data. Bookmaker figures use their closing prices.</p></div>
+  ${strongRecord()}
+  ${marketsRecord()}
+  ${scorersRecord()}
+  <div class="card"><h2>Logged predictions</h2>`;
+  if (live.length) {
+    h += `<p>${ls.correct} of ${ls.n} results right, ${ls.exact} exact scores, since predictions started being saved before kickoff.</p>` + matchTable(live.map(e => ({ ...e, ...e.result, actual: e.result.score })));
+  } else {
+    h += `<p class="small">Each refresh saves the prediction for every match that hasn't kicked off yet, and grades it once the result is in. ${pend.length} predictions are saved and waiting: ${pend.slice(0, 3).map(e => `${esc(e.home)} v ${esc(e.away)}`).join(", ")}${pend.length > 3 ? ` and ${pend.length - 3} more` : ""}.</p>`;
+  }
+  h += `</div><div class="card"><h2>Every backtested game</h2>${matchTable(D.track.backtest)}</div>`;
+  el.innerHTML = h;
+}
+
+function strongRecord() {
+  const rs = D.track.strong_record || [];
+  if (!rs.length) return "";
+  const P = (a, b) => (b ? Math.round((100 * a) / b) + "%" : "–");
+  const graded = [];
+  (D.track.live || []).forEach(e => ((e.result && e.result.strong) || []).forEach(s => { if (s.hit != null) graded.push(s); }));
+  return `<div class="card"><h2>Strongest picks</h2>
+  <p class="small">How often each kind of call came in when the model was at least this sure. The cut-offs were picked on 2025-26 (350 games from September on, refitted every week using only earlier data). They were then checked on this season, which they weren't tuned on.</p>
+  <div class="scroll"><table><thead><tr><th>Kind of pick</th><th class="r">Cut-off</th><th class="r">2025-26</th><th class="r">This season</th><th class="r">Games with one</th></tr></thead><tbody>
+  ${rs.map(r => `<tr><td>${esc(r.label)}</td><td class="r">${pc(r.min_p)}+</td>
+    <td class="r"><b>${P(r.last_hits, r.last_n)}</b> <span class="small">${r.last_n != null ? `${r.last_hits}/${r.last_n}` : ""}</span></td>
+    <td class="r"><b>${P(r.this_hits, r.this_n)}</b> <span class="small">${r.this_hits}/${r.this_n}</span></td>
+    <td class="r">${P(r.this_n, r.this_of)}</td></tr>`).join("")}
+  </tbody></table></div>
+  <p class="small">Saved before kickoff and graded since: ${graded.length ? `${graded.filter(s => s.hit).length} of ${graded.length} came in.` : "none graded yet. They'll appear here as results come in."} A tie in corners or shots on target voids that pick.</p></div>`;
+}
+
+function marketsRecord() {
+  const ms = D.track.markets_summary || [];
+  if (!ms.length) return "";
+  const P = (a, b) => (b ? Math.round((100 * a) / b) + "%" : "–");
+  return `<div class="card"><h2>Other markets</h2>
+  <p class="small">Same backtest, for the headline call in each market. "Simple guess" always picks whichever outcome happened more often. The Brier score measures how good the percentages were (lower is better). The model has an edge when its Brier score beats the simple base-rate guess.</p>
+  <div class="scroll"><table><thead><tr><th>Market</th><th class="r">Games</th><th class="r">Calls right</th><th class="r">Simple guess</th><th class="r">Brier (model)</th><th class="r">Brier (base rate)</th><th>Verdict</th></tr></thead><tbody>
+  ${ms.map(r => `<tr><td>${esc(r.label)}${r.book_n ? `<span class="small" style="display:block">Bookmakers: ${r.book_hits} right, Brier ${r.book_brier.toFixed(3)}</span>` : ""}</td><td class="r">${r.n}</td>
+    <td class="r"><b>${r.hits}</b> (${P(r.hits, r.n)})</td><td class="r">${r.always_majority != null ? r.always_majority + " (" + P(r.always_majority, r.n) + ")" : "–"}</td>
+    <td class="r">${r.brier.toFixed(3)}</td><td class="r">${r.base_brier.toFixed(3)}</td>
+    <td>${hasEdge(r) ? '<span class="edge yes">Has an edge</span>' : '<span class="edge no">No real edge</span>'}</td></tr>`).join("")}
+  </tbody></table></div>
+  <p class="small">Corners and cards come only from games in the results file, so the newest scores from the Fantasy feed aren't included. The base rate here uses this season's actual frequency, which flatters the simple guess a little.</p></div>`;
+}
+
+function scorersRecord() {
+  const S = D.track.scorers_summary;
+  if (!S) return "";
+  return `<div class="card"><h2>Goalscorers</h2>
+  <p class="small">Same backtest: before each gameweek, every player got an "anytime scorer" chance using only earlier games (no team news, since past injury lists aren't archived). Then we checked who actually scored.</p>
+  <div class="tiles" style="margin:10px 0">
+    <div class="tile"><div class="k">Likeliest scorer per match</div><div class="v">${S.top1_hits} / ${S.matches}</div><div class="s">scored. The model expected ${S.top1_expected.toFixed(0)}.</div></div>
+    <div class="tile"><div class="k">Top 3 per match</div><div class="v">${Math.round(100 * S.top3_any / S.matches)}%</div><div class="s">of matches had at least one of our top 3 score (${S.top3_any} of ${S.matches}).</div></div>
+    <div class="tile"><div class="k">Scorers expected vs real</div><div class="v">${S.predicted_scorers.toFixed(0)} / ${S.actual_scorers}</div><div class="s">across ${S.player_predictions} player predictions.</div></div>
+    <div class="tile"><div class="k">Brier score</div><div class="v">${S.brier.toFixed(3)}</div><div class="s">vs ${S.base_brier.toFixed(3)} for giving everyone the same chance. ${hasEdge(S) ? "Has an edge." : "No real edge."}</div></div>
+  </div>
+  <div class="scroll"><table><thead><tr><th>Model said</th><th class="r">Players</th><th class="r">Average chance given</th><th class="r">Actually scored</th></tr></thead><tbody>
+  ${S.buckets.map(b => `<tr><td>${Math.round(b.from * 100)}–${Math.round(b.to * 100)}%</td><td class="r">${b.n}</td><td class="r">${pc(b.predicted)}</td><td class="r"><b>${pc(b.actual)}</b></td></tr>`).join("")}
+  </tbody></table></div>
+  <p class="small">When the two right-hand columns are close, the percentages can be taken at face value. The top band has few players, so its figure jumps around.</p></div>`;
+}
+
+function matchTable(rows) {
+  return `<div class="scroll"><table><thead><tr><th>GW</th><th>Match</th><th>Chances H·D·A</th><th class="r">Call</th><th class="r">Result</th><th></th></tr></thead><tbody>
+  ${rows.map(r => `<tr><td>${r.gw}</td><td>${esc(r.home)} v ${esc(r.away)}</td><td class="num" style="white-space:nowrap">${pc(r.probs[0])} · ${pc(r.probs[1])} · ${pc(r.probs[2])}</td>
+  <td class="r">${esc(r.pick_score)}</td><td class="r"><b>${esc(r.actual)}</b></td><td style="white-space:nowrap">${r.correct ? '<span class="ok">✓</span>' : '<span class="no">✗</span>'}${r.exact ? ' <span class="ok">exact</span>' : ""}</td></tr>`).join("")}
+  </tbody></table></div>`;
+}
+
+function gwChart() {
+  const g = D.track.backtest_by_gw;
+  const W = 640, Hh = 190, pad = { l: 28, r: 8, t: 12, b: 26 };
+  const maxN = Math.max(...g.map(x => x.n));
+  const bw = (W - pad.l - pad.r) / g.length;
+  const y = v => pad.t + (Hh - pad.t - pad.b) * (1 - v / maxN);
+  let s = `<div class="scroll"><svg viewBox="0 0 ${W} ${Hh}" width="100%" style="max-width:${W}px;min-width:420px" role="img" aria-label="Correct results per gameweek, model versus bookmakers">`;
+  for (let v = 0; v <= maxN; v += 2) s += `<line x1="${pad.l}" x2="${W - pad.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${pad.l - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+  g.forEach((x, i) => {
+    const x0 = pad.l + i * bw + bw * 0.15, w = bw * 0.33;
+    s += `<rect x="${x0}" y="${y(x.correct)}" width="${w}" height="${y(0) - y(x.correct)}" fill="var(--accent)" rx="2"><title>GW${x.gw}: model ${x.correct}/${x.n}</title></rect>`;
+    s += `<rect x="${x0 + w + 2}" y="${y(x.market_correct)}" width="${w}" height="${y(0) - y(x.market_correct)}" fill="var(--draw)" rx="2"><title>GW${x.gw}: bookmakers ${x.market_correct}/${x.n}</title></rect>`;
+    s += `<text x="${pad.l + i * bw + bw / 2}" y="${Hh - 8}" text-anchor="middle">GW${x.gw}</text>`;
+  });
+  s += `</svg></div><div class="small" style="display:flex;gap:16px;margin:4px 0 8px"><span><span style="display:inline-block;width:10px;height:10px;background:var(--accent);border-radius:2px"></span> Our prediction (model + odds)</span><span><span style="display:inline-block;width:10px;height:10px;background:var(--draw);border-radius:2px"></span> Bookmakers' favourite</span></div>`;
+  return s;
+}
+
+/* ------------------------------------------------------------------ table */
+function renderTable() {
+  const el = $("#v-table");
+  const form = {};
+  D.fixtures.forEach(f => { form[f.home] = f.form.home; form[f.away] = f.form.away; });
+  const rat = Object.fromEntries(D.ratings.map(r => [r.team, r]));
+  let h = `<div class="gw-head"><h2>League table</h2><span class="sub">Built from the results in this data, including provisional scores</span></div>
+  <div class="card scroll"><table><thead><tr><th class="r">#</th><th>Team</th><th class="r">P</th><th class="r">W</th><th class="r">D</th><th class="r">L</th><th class="r">GF</th><th class="r">GA</th><th class="r">GD</th><th class="r">Pts</th><th>Last 6</th></tr></thead><tbody>
+  ${D.table.map(r => `<tr><td class="r">${r.pos}</td><td><b>${esc(r.team)}</b></td><td class="r">${r.p}</td><td class="r">${r.w}</td><td class="r">${r.d}</td><td class="r">${r.l}</td><td class="r">${r.gf}</td><td class="r">${r.ga}</td><td class="r">${r.gd > 0 ? "+" : ""}${r.gd}</td><td class="r"><b>${r.pts}</b></td>
+    <td><div class="form-row">${form[r.team] ? form[r.team].last6.slice().reverse().map(g => `<span class="res ${g.res}" title="${g.venue === "H" ? "vs" : "at"} ${esc(g.opp)} ${g.gf}-${g.ga}">${g.res}</span>`).join("") : ""}</div></td></tr>`).join("")}
+  </tbody></table></div>
+  <div class="gw-head"><h2>Model ratings</h2><span class="sub">Goals per game against an average Premier League side on neutral ground</span></div>
+  <div class="card scroll"><table><thead><tr><th>Team</th><th class="r">Scores</th><th class="r">Concedes</th><th class="r">Net</th><th>Right now</th><th class="r">vs usual</th></tr></thead><tbody>
+  ${D.ratings.map(r => `<tr><td><b>${esc(r.team)}</b></td><td class="r">${f2(r.attack)}</td><td class="r">${f2(r.concede)}</td><td class="r"><b>${sgn(r.net)}</b></td>
+    <td><span class="tag ${levelClass(r.level_tag)}">${esc(r.level_tag)}</span></td><td class="r ${r.level_delta > 0 ? "pos" : "neg"}">${sgn(r.level_delta)}</td></tr>`).join("")}
+  </tbody></table><p class="small">"Right now" compares a rating built from roughly the last six weeks with the team's two-season level. Peak form or a slump means a gap of 0.30+ goals per game; above or below means 0.12+.</p></div>`;
+  if (D.in_form && D.in_form.length) h += `<div class="gw-head"><h2>In-form players</h2><span class="sub">Last 4 games well above their season, by xG + xA per 90</span></div>
+  <div class="card scroll"><table><thead><tr><th>Player</th><th>Team</th><th class="r">Rating</th><th class="r">Last 4 games</th><th class="r">Per 90 now</th><th class="r">Season</th></tr></thead><tbody>
+  ${D.in_form.map(p => `<tr><td><b>${esc(p.name)}</b> <span class="small">${p.pos}</span></td><td>${esc(p.team)}</td><td class="r">${rtMark(p.rating)}</td>
+    <td class="r">${p.l4g} G, ${p.l4a} A <span class="small">(${p.l4min} min)</span></td><td class="r pos"><b>${p.att_recent.toFixed(2)}</b></td><td class="r">${p.att.toFixed(2)}</td></tr>`).join("")}
+  </tbody></table><p class="small">Per 90 = xG + 0.7 × xA per 90 minutes. "Now" leans on the last four games but is pulled towards the season figure, so a single big game doesn't dominate. Rating is our own attack rating (45–99) within each position. Form like this tends to fade, which is why predictions lean on the season figure.</p></div>`;
+  el.innerHTML = h;
+}
+
+/* ------------------------------------------------------------------ method */
+function renderMethod() {
+  const M = D.model, A = D.data_as_of;
+  $("#v-method").innerHTML = `<div class="prose">
+  <h2>How a prediction is made</h2>
+  <ol>
+    <li><b>Team ratings.</b> Every team gets an attack rating (how many goals it tends to score) and a defence rating (how many it lets in), fitted to ${M.matches_used} Premier League games from the last two seasons. Recent games count more: a game from ${Math.round(M.half_life / 30)} months ago counts half as much as one from today. This season's games use a blend of ${Math.round(M.xg_weight * 100)}% xG and ${Math.round((1 - M.xg_weight) * 100)}% real goals, because xG is a steadier read of how well a team played.</li>
+    <li><b>Home advantage.</b> Home teams score about ×${M.home_advantage} as many goals as they would away (fitted from the data).</li>
+    <li><b>Promoted sides</b> (${M.promoted.join(", ")}) start from a slightly weaker prior, since they have no Premier League games last season. Their own results quickly take over.</li>
+    <li><b>Team news.</b> Each injured, suspended or doubtful player removes part of his share of the team's xG + xA (attack) or back-line minutes (defence), scaled by his chance of playing. Replacements make up roughly half the loss, so a player behind 20% of a team's chances lowers its expected goals by about 10%.</li>
+    <li><b>Scores.</b> Expected goals for each side go into a Dixon-Coles model: Poisson goal counts with a small fix for low scores (ρ = ${M.rho}), which gives the chance of every scoreline. Adding those up gives the home, draw and away percentages.</li>
+    <li><b>Our call</b> is the likeliest result and the likeliest score within it. When the favourite is under 60%, a safer "win or draw" call is shown too.</li>
+  </ol>
+  <h2>Goals, half-time, corners and cards</h2>
+  <ul>
+    <li><b>Goal lines, both teams to score, clean sheets, margins, first goal</b> all come from the same scoreline chances as the result, so they always agree with each other.</li>
+    <li><b>Half-time.</b> About ${Math.round(M.ht_share * 100)}% of goals come before the break. Each half is modelled with its share of the expected goals, which gives half-time and half-time/full-time chances.</li>
+    <li><b>Corners</b> get their own team ratings (corners won and corners conceded), fitted like goals with recent games counting more. Premier League games currently average ${M.corners_avg.toFixed(1)} corners. Counts are spread a bit wider than a plain Poisson to match how much corners vary.</li>
+    <li><b>Shots on target</b> get team ratings the same way as corners (on target for, on target against), scaled down when attackers are missing. Average: ${M.sot_avg.toFixed(1)} a game.</li>
+    <li><b>Goalscorers.</b> Each player has a scoring rate per 90 minutes, mostly from his xG (85%) plus a little from real goals, pulled towards a typical rate for his position until he has played about five full games. His expected minutes come from his team's last four games and the season, times his chance of playing. The team's expected goals are shared out by rate × minutes, with about 3% left for own goals. Anytime = 1 − e<sup>−x</sup> for a player expected to score x goals; first scorer = his share of all expected goals × the chance there is a goal.</li>
+    <li><b>Cards</b> (yellow and red each count 1) get team ratings too, plus a referee adjustment. ${M.referees_rated} referees are rated from their games in the data, shrunk towards average until they have enough games. Referees are usually only announced a few days before a match. Average: ${M.cards_avg.toFixed(1)} cards a game.</li>
+  </ul>
+  <h2>Player ratings and line-ups</h2>
+  <p>Every outfield player gets our own attack rating (45–99): how his xG + 0.7 × xA per 90 minutes ranks among players in his position, pulled towards what his FPL starting price suggests until he has played about five full games. This is built from the official Fantasy Premier League per-match stats. FIFA / EA Sports FC Ultimate Team ratings aren't used: they belong to EA and aren't licensed for reuse. A team's line-up strength is its players' attack values (per 90) weighted by expected minutes, compared with its usual line-up this season. The team ratings already reflect the usual line-up, so only the difference moves the prediction.</p>
+  <p>Tested on ${D.model.squad_tests_games || 87} games this season (gameweeks 3 onwards), refitting before each gameweek:</p>
+  <div class="scroll"><table><thead><tr><th>Variant</th><th class="r">Model RPS</th><th class="r">Right</th><th class="r">With bookmakers</th><th>Used?</th></tr></thead><tbody>
+  ${(M.squad_tests || []).map(x => `<tr><td>${esc(x.name)}${x.note ? `<span class="small" style="display:block">${esc(x.note)}</span>` : ""}</td><td class="r">${x.rps.toFixed(4)}</td><td class="r">${x.right}</td><td class="r">${x.blend_rps.toFixed(4)} · ${x.blend_right}</td><td>${x.used ? '<span class="edge yes">Yes</span>' : '<span class="edge no">No</span>'}</td></tr>`).join("")}
+  </tbody></table></div>
+  <p class="small">Confirmed line-ups only come out about an hour before kickoff, so the main prediction uses team news, and each match has a line-up check where you tick the starters. The bookmaker odds in the test were taken days before, so they didn't know the line-ups either.</p>
+  <h2>What "form" and "level" mean here</h2>
+  <p>The step-by-step box splits each team's expected goals into its two-season level, the shift from recent form, and team news. The "right now" tag compares a rating built mostly from the last six weeks against that usual level. "Finishing" shows goals minus xG: big positive numbers usually shrink over time, which is why the model leans on xG.</p>
+  <h2>What it doesn't know</h2>
+  <ul><li>Line-ups, until you tick them in a match's line-up check. Also tactics, manager changes, weather, fixture congestion and motivation.</li>
+  <li>Defensive quality. Ratings measure attacking output; adding defenders' quality (by FPL price) made the line-up test worse. Team news is weighted by each player's share of output, which undersells great defenders and holding midfielders.</li>
+  <li>The newest results arrive from the Fantasy feed without xG, so they count as goals only until the results file updates.</li></ul>
+  <h2>Blending with the bookmakers</h2>
+  <p>Bookmaker odds sum up a lot that the model can't see, like line-up leaks and late fitness news. When odds for a match are out (usually a few days before), the result chances shown are ${Math.round(M.blend_model_weight * 100)}% model and ${Math.round((1 - M.blend_model_weight) * 100)}% bookmakers, with the margin removed. Only the home-versus-away balance is taken from the odds. Total goals stay the model's, because that kept the goal predictions just as good. Every match still shows the model's own view, and the step-by-step box shows how much the odds moved each side's expected goals.</p>
+  <h2>Strongest picks</h2>
+  <p>Some calls come in much more often than others. Before each week of the 2025-26 season, we refitted everything on earlier games only and counted how often each kind of call came in, by how sure the model was. These cut-offs gave the best record without being too rare. We then checked them on this season, which they weren't tuned on:</p>
+  <div class="scroll"><table><thead><tr><th>Kind of pick</th><th class="r">Cut-off</th><th class="r">2025-26</th><th class="r">This season</th></tr></thead><tbody>
+  ${(D.track.strong_record || []).map(r => `<tr><td>${esc(r.label)}</td><td class="r">${pc(r.min_p)}+</td><td class="r">${r.last_n ? `${Math.round(100 * r.last_hits / r.last_n)}% of ${r.last_n}` : "–"}</td><td class="r">${r.this_n ? `${Math.round(100 * r.this_hits / r.this_n)}% of ${r.this_n}` : "–"}</td></tr>`).join("")}
+  </tbody></table></div>
+  <p>Other markets aren't strong picks. Over/under goals, both teams to score, cards and total shots called right came in barely more often than always guessing the commoner outcome. A high hit rate isn't the same as value: favourites are priced short, so this isn't betting advice.</p>
+  <h2>How fresh the odds are</h2>
+  <p>The bookmaker odds come from football-data.co.uk's free file, which is updated a couple of times a week (the current one: ${A.odds_updated ? when(A.odds_updated) : "unknown"}). It isn't updated again before kickoff, so each match shows how old its odds are. Prices nearer kickoff are a little better: over ${M.odds_timing ? M.odds_timing.games.toLocaleString() : "1,900"} Premier League games (2021-22 to 2025-26), the closing prices picked ${M.odds_timing ? M.odds_timing.closing_right : 55.9}% of results against ${M.odds_timing ? M.odds_timing.early_right : 55.3}% for the earlier ones. That's about 2 more right results a season. Closing prices aren't free before kickoff, so the best we can do is refresh soon after the file updates, so each match has odds at all, and again on match day for the latest team news.</p>
+  <h2>Extra data we tested</h2>
+  <p>Each idea was tested by predicting every game of 2025-26 and 2026-27 using only earlier data. Lower RPS is better. We only kept what helped.</p>
+  <div class="scroll"><table><thead><tr><th>Variant</th><th class="r">RPS</th><th>Used?</th></tr></thead><tbody>
+  ${(M.data_experiments || []).map(x => `<tr><td>${esc(x.name)}${x.note ? `<span class="small" style="display:block">${esc(x.note)}</span>` : ""}</td><td class="r">${x.rps.toFixed(4)}</td><td>${x.used ? '<span class="edge yes">Yes</span>' : '<span class="edge no">No</span>'}</td></tr>`).join("")}
+  </tbody></table></div>
+  <h2>Data and dates</h2>
+  <ul>${D.sources.map(s => `<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>: ${esc(s.what)} Downloaded ${when(s.fetched)}.</li>`).join("")}
+  <li>The results file (with xG) runs to ${A.results_csv_last_match ? dtf(A.results_csv_last_match, { day: "numeric", month: "long" }) : "–"}. Later scores taken from the Fantasy feed: ${A.fpl_results_added.length ? A.fpl_results_added.map(r => `${esc(r.home)} ${r.score} ${esc(r.away)}${r.provisional ? " (provisional)" : ""}`).join(", ") : "none"}.</li></ul>
+  <h2>Refreshing</h2>
+  <p>On your PC, run <code>python build.py</code> in the <code>pl-predictor</code> folder. It downloads fresh data, refits, saves predictions for unplayed games, grades finished ones and rebuilds this page (<code>out/index.html</code>). Model version ${esc(M.version)}, page built ${when(D.generated_at)}.</p>
+  <p class="small">Not betting advice. The percentages are a model's estimate and will often be wrong about single matches.</p></div>`;
+}
+
+/* ------------------------------------------------------------------ shell */
+function header() {
+  const A = D.data_as_of;
+  $("#eyebrow").textContent = `Premier League 2026-27 · Gameweeks ${D.gameweeks.join(" & ")}`;
+  $("#asof").innerHTML = `<span>Built <b>${when(D.generated_at)}</b></span>
+    <span>Results &amp; xG to <b>${A.results_csv_last_match ? dtf(A.results_csv_last_match, { day: "numeric", month: "short" }) : "–"}</b>${A.fpl_results_added.length ? ` + ${A.fpl_results_added.length} newer scores` : ""}</span>
+    <span>Team news as of <b>${when(A.fpl_fetched)}</b></span>
+    ${A.odds_updated ? `<span>Odds taken <b>${when(A.odds_updated)}</b></span>` : ""}`;
+}
+
+function route() {
+  const v = (location.hash || "#fixtures").slice(1);
+  const views = ["fixtures", "picks", "record", "bets", "table", "method"];
+  const cur = views.includes(v) ? v : "fixtures";
+  views.forEach(n => { $("#v-" + n).hidden = n !== cur; });
+  document.querySelectorAll("nav.tabs a").forEach(a => { if (a.dataset.view === cur) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+}
+
+async function start() {
+  try {
+    D = EMBED || await (await fetch("data.json")).json();
+  } catch (e) {
+    // Opened as a file (file://): browsers won't let the page read data.json next to it, so let the viewer pick it
+    $("#v-fixtures").innerHTML = `<div class="card"><p style="margin-top:0"><b>The prediction data didn't load.</b> Opened straight from a folder, the browser won't let this page read <code>data.json</code> by itself.</p>
+      <p><label class="btn yes" style="cursor:pointer">Choose data.json<input type="file" id="pick-data" accept=".json,application/json" hidden></label></p>
+      <p class="small">Or open <code>out/index.html</code> from the pl-predictor folder, which has the data built in, or use the published page.</p></div>`;
+    $("#pick-data").addEventListener("change", async ev => {
+      const file = ev.target.files && ev.target.files[0]; if (!file) return;
+      try { D = JSON.parse(await file.text()); } catch (err) { alert("That file isn't the predictor's data.json."); return; }
+      begin();
+    });
+    return;
+  }
+  begin();
+}
+/* ---------- hosted version: Supabase login and storage ---------- */
+const SB_URL = "__SB_URL__", SB_KEY = "__SB_KEY__";
+let SB = null, SB_USER = null;
+function sbAdapter(uid) {
+  // rows in table "docs" (user_id, path, data); paths look like the artifact database's:
+  // "limits", "limits/bets/<id>", "odds_request", "job". Row Level Security keeps them private.
+  const prefix = `data/users/${uid}/`, listeners = new Set();
+  let cache = null;
+  const key = p => (p.startsWith(prefix) ? p.slice(prefix.length) : p);
+  const fire = () => listeners.forEach(f => { try { f(); } catch (e) { /* one listener must not stop the rest */ } });
+  async function load() {
+    const { data, error } = await SB.from("docs").select("path,data").eq("user_id", uid);
+    if (error) throw { code: "unavailable", message: error.message };
+    cache = Object.fromEntries(data.map(r => [r.path, r.data])); fire();
+  }
+  const fail = e => { throw { code: "unavailable", message: (e && e.message) || "error" }; };
+  function docRef(path) {
+    const k = key(path);
+    return {
+      async get() { if (!cache) await load(); return { exists: k in cache, data: () => cache[k], metadata: { fromCache: false } }; },
+      async set(d) { const { error } = await SB.from("docs").upsert({ user_id: uid, path: k, data: d, updated_at: new Date().toISOString() }); if (error) fail(error); await load(); },
+      async update(d) { if (!cache) await load(); return this.set({ ...(cache[k] || {}), ...d }); },
+      async delete() { const { error } = await SB.from("docs").delete().eq("user_id", uid).eq("path", k); if (error) fail(error); await load(); },
+      onSnapshot(next) { const f = () => { if (cache) next({ exists: k in cache, data: () => cache[k], metadata: { fromCache: false } }); }; listeners.add(f); f(); return () => listeners.delete(f); },
+      collection(c) { return colRef(path + "/" + c); },
+    };
+  }
+  function colRef(path) {
+    const k = key(path) + "/";
+    return {
+      doc: id => docRef(path + "/" + id),
+      onSnapshot(next) {
+        const f = () => { if (!cache) return; next({ docs: Object.keys(cache).filter(p => p.startsWith(k) && !p.slice(k.length).includes("/")).map(p => ({ id: p.slice(k.length), data: () => cache[p] })), metadata: { fromCache: false } }); };
+        listeners.add(f); f(); return () => listeners.delete(f);
+      },
+    };
+  }
+  load().catch(() => {});
+  setInterval(() => { if (!document.hidden) load().catch(() => {}); }, 60000);   // pick up the cloud job's answers
+  return { doc: docRef, collection: colRef };
+}
+async function sbInit() {
+  if ((window.claude && window.claude.use) || !/^https:/.test(SB_URL) || !window.supabase) return;
+  SB = window.supabase.createClient(SB_URL, SB_KEY);
+  const { data } = await SB.auth.getSession();
+  SB_USER = data && data.session ? data.session.user : null;
+  const uid = SB_USER ? SB_USER.id : null;
+  const db = uid ? sbAdapter(uid) : null;
+  window.claude = { use: async n => (n === "user" ? { id: async () => uid } : n === "db" ? db : null) };
+}
+function loginCard() {
+  return `<div class="card"><h2>Sign in</h2>
+    <p class="small" style="margin-top:0">Sign in to save your bets, limits and breaks, and to use the buttons below. Only you can see your data.</p>
+    <div class="formrow"><label>Email <input type="email" id="lg-email" class="wide" autocomplete="email" style="width:240px"></label></div>
+    <div class="formrow"><label>Password <input type="password" id="lg-pass" autocomplete="current-password" style="width:200px"></label></div>
+    <div class="formrow"><button type="button" class="btn yes" id="lg-in">Sign in</button><button type="button" class="btn" id="lg-up">Create account</button></div>
+    <p class="small" id="lg-msg"></p></div>`;
+}
+function wireLogin(el) {
+  const go = async up => {
+    const email = $("#lg-email").value.trim(), password = $("#lg-pass").value, msg = $("#lg-msg");
+    if (!email || password.length < 8) { msg.textContent = "Type your email and a password of at least 8 characters."; return; }
+    msg.textContent = up ? "Creating your account…" : "Signing in…";
+    const r = up ? await SB.auth.signUp({ email, password, options: { emailRedirectTo: location.origin + location.pathname } })
+      : await SB.auth.signInWithPassword({ email, password });
+    if (r.error) { msg.textContent = r.error.message; return; }
+    if (up && !r.data.session) { msg.textContent = "Check your email and click the confirmation link, then come back here and sign in."; return; }
+    location.reload();
+  };
+  const a = el.querySelector("#lg-in"), b = el.querySelector("#lg-up");
+  if (a) a.addEventListener("click", () => go(false));
+  if (b) b.addEventListener("click", () => go(true));
+}
+function begin() {
+  header(); renderFixtures(); renderPicks(); renderRecord(); renderBets(); renderTable(); renderMethod(); route();
+  window.addEventListener("hashchange", route);
+  sbInit().catch(() => {}).then(initBets);
+}
+start();
+</script>

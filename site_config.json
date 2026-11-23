@@ -1,0 +1,6 @@
+{
+ "about": "Public settings for the hosted page. The Supabase anon key is meant to be public: Row Level Security keeps each user's rows private.",
+ "page_url": "https://mixeholton.github.io/pl-predictor/",
+ "supabase_url": "https://ddejriuvhxakozdvambr.supabase.co",
+ "supabase_anon_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZWpyaXV2aHhha296ZHZhbWJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTU0NDU5NjQsImV4cCI6MjExMTAyMTk2NH0.qBXioYwGf7otFSwLePWVtTLloS0hvOU-ub8wcWCJUxk"
+}

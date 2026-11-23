@@ -1,0 +1,95 @@
+# Refreshes the predictions, publishes the page to GitHub Pages and sends phone notifications.
+# Times are UTC (Denmark is UTC+1 in winter, UTC+2 in summer).
+name: Predictor
+
+on:
+  schedule:
+    - cron: "0 8 * * *"         # every morning: refresh, and notify today's strong picks on match days
+    - cron: "10 12 * * 2,5"     # Tue and Fri, after football-data.co.uk posts new odds
+    - cron: "*/15 7-21 * * *"   # page buttons: "Refresh predictions" / "Send test notification"
+  workflow_dispatch:            # "Run workflow" button on GitHub
+
+permissions:
+  contents: write    # save predictions_log.json back to the repo
+  pages: write
+  id-token: write
+
+concurrency:
+  group: predictor
+  cancel-in-progress: false
+
+jobs:
+  predict:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      FEED_TOKEN: ${{ secrets.FEED_TOKEN }}
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt
+
+      - name: Page buttons
+        id: jobs
+        run: python jobs.py check
+
+      - name: Decide whether to build
+        id: plan
+        run: |
+          if [ "${{ github.event.schedule }}" = "*/15 7-21 * * *" ] && [ "${{ steps.jobs.outputs.build }}" != "true" ]; then
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build predictions
+        if: steps.plan.outputs.build == 'true'
+        run: python build.py
+
+      - name: Save the prediction log
+        if: steps.plan.outputs.build == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add predictions_log.json
+          git diff --cached --quiet || git commit -m "Update prediction log"
+          git pull --rebase --autostash && git push || echo "Could not push the log this time"
+
+      - name: Prepare the site
+        if: steps.plan.outputs.build == 'true'
+        run: |
+          mkdir -p site
+          cp out/index.html out/data.json page/manifest.webmanifest page/icon-192.png page/icon-512.png site/
+
+      - uses: actions/configure-pages@v5
+        if: steps.plan.outputs.build == 'true'
+
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.plan.outputs.build == 'true'
+        with:
+          path: site
+
+      - id: deploy
+        if: steps.plan.outputs.build == 'true'
+        uses: actions/deploy-pages@v4
+
+      - name: Answer the refresh request
+        if: steps.jobs.outputs.build == 'true'
+        run: python jobs.py done
+
+      - name: Mark the refresh request as failed
+        if: failure() && steps.jobs.outputs.build == 'true'
+        run: python jobs.py failed
+
+      - name: Match-day notification
+        if: github.event.schedule == '0 8 * * *'
+        run: python jobs.py matchday

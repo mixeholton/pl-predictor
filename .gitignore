@@ -1,0 +1,9 @@
+# generated
+out/
+site/
+data/raw/
+__pycache__/
+*.pyc
+# private: your phone-notification topic and local folders
+notify_config.json
+local_copies.json
