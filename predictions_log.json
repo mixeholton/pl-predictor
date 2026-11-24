@@ -236,15 +236,15 @@
   "home": "Nott'm Forest",
   "away": "Chelsea",
   "kickoff": "2026-11-27T20:00:00Z",
-  "made_at": "2026-11-24T19:08:41.967934Z",
+  "made_at": "2026-11-24T22:23:06.587242Z",
   "model": "dc-2",
   "probs": [
-   0.518,
+   0.519,
    0.25,
    0.232
   ],
   "model_probs": [
-   0.518,
+   0.519,
    0.25,
    0.232
   ],
@@ -268,7 +268,7 @@
   "home": "Leeds",
   "away": "Coventry",
   "kickoff": "2026-11-28T15:00:00Z",
-  "made_at": "2026-11-24T19:08:41.967934Z",
+  "made_at": "2026-11-24T22:23:06.587242Z",
   "model": "dc-2",
   "probs": [
    0.593,
@@ -337,17 +337,17 @@
   "home": "Man United",
   "away": "Brentford",
   "kickoff": "2026-11-28T15:00:00Z",
-  "made_at": "2026-11-24T19:08:41.967934Z",
+  "made_at": "2026-11-24T22:23:06.587242Z",
   "model": "dc-2",
   "probs": [
-   0.439,
+   0.45,
    0.25,
-   0.31
+   0.299
   ],
   "model_probs": [
-   0.439,
+   0.45,
    0.25,
-   0.31
+   0.299
   ],
   "blend": false,
   "pick_score": "2-1",
@@ -358,18 +358,18 @@
   ],
   "safe": {
    "label": "Man United win or draw",
-   "p": 0.69
+   "p": 0.701
   },
   "strong": [
    {
     "key": "sot",
     "market": "More shots on target",
     "pick": "Man United",
-    "p": 0.8,
-    "p_any": 0.717,
-    "tie": 0.104,
+    "p": 0.804,
+    "p_any": 0.721,
+    "tie": 0.103,
     "side": "home",
-    "fair": 1.25,
+    "fair": 1.24,
     "fair_any": 1.39,
     "early": false
    },
@@ -377,7 +377,7 @@
     "key": "corners",
     "market": "More corners",
     "pick": "Man United",
-    "p": 0.754,
+    "p": 0.753,
     "p_any": 0.681,
     "tie": 0.096,
     "side": "home",
@@ -394,15 +394,15 @@
   "home": "Ipswich",
   "away": "Aston Villa",
   "kickoff": "2026-11-28T17:30:00Z",
-  "made_at": "2026-11-24T19:08:41.967934Z",
+  "made_at": "2026-11-24T22:23:06.587242Z",
   "model": "dc-2",
   "probs": [
-   0.267,
+   0.268,
    0.239,
    0.494
   ],
   "model_probs": [
-   0.267,
+   0.268,
    0.239,
    0.494
   ],
@@ -415,7 +415,7 @@
   ],
   "safe": {
    "label": "Aston Villa win or draw",
-   "p": 0.733
+   "p": 0.732
   },
   "strong": [],
   "result": null
@@ -426,7 +426,7 @@
   "home": "Everton",
   "away": "Liverpool",
   "kickoff": "2026-11-29T12:00:00Z",
-  "made_at": "2026-11-24T19:08:41.967934Z",
+  "made_at": "2026-11-24T22:23:06.587242Z",
   "model": "dc-2",
   "probs": [
    0.293,
@@ -471,7 +471,7 @@
   "home": "Brighton",
   "away": "Newcastle",
   "kickoff": "2026-11-29T14:05:00Z",
-  "made_at": "2026-11-24T19:08:41.967934Z",
+  "made_at": "2026-11-24T22:23:06.587242Z",
   "model": "dc-2",
   "probs": [
    0.528,
@@ -516,7 +516,7 @@
   "home": "Crystal Palace",
   "away": "Hull",
   "kickoff": "2026-11-29T14:05:00Z",
-  "made_at": "2026-11-24T19:08:41.967934Z",
+  "made_at": "2026-11-24T22:23:06.587242Z",
   "model": "dc-2",
   "probs": [
    0.404,
@@ -561,15 +561,15 @@
   "home": "Fulham",
   "away": "Bournemouth",
   "kickoff": "2026-11-29T14:05:00Z",
-  "made_at": "2026-11-24T19:08:41.967934Z",
+  "made_at": "2026-11-24T22:23:06.587242Z",
   "model": "dc-2",
   "probs": [
-   0.339,
+   0.338,
    0.281,
    0.381
   ],
   "model_probs": [
-   0.339,
+   0.338,
    0.281,
    0.381
   ],
@@ -582,7 +582,7 @@
   ],
   "safe": {
    "label": "Bournemouth win or draw",
-   "p": 0.661
+   "p": 0.662
   },
   "strong": [],
   "result": null
@@ -593,7 +593,7 @@
   "home": "Sunderland",
   "away": "Tottenham",
   "kickoff": "2026-11-29T14:05:00Z",
-  "made_at": "2026-11-24T19:08:41.967934Z",
+  "made_at": "2026-11-24T22:23:06.587242Z",
   "model": "dc-2",
   "probs": [
    0.35,
@@ -621,12 +621,12 @@
     "key": "corners",
     "market": "More corners",
     "pick": "Tottenham",
-    "p": 0.694,
-    "p_any": 0.619,
+    "p": 0.695,
+    "p_any": 0.62,
     "tie": 0.108,
     "side": "away",
     "fair": 1.44,
-    "fair_any": 1.62,
+    "fair_any": 1.61,
     "early": false
    }
   ],
@@ -638,7 +638,7 @@
   "home": "Arsenal",
   "away": "Man City",
   "kickoff": "2026-11-29T16:30:00Z",
-  "made_at": "2026-11-24T19:08:41.967934Z",
+  "made_at": "2026-11-24T22:23:06.587242Z",
   "model": "dc-2",
   "probs": [
    0.428,
@@ -683,7 +683,7 @@
   "home": "Coventry",
   "away": "Ipswich",
   "kickoff": "2026-12-01T20:00:00Z",
-  "made_at": "2026-11-24T19:08:41.967934Z",
+  "made_at": "2026-11-24T22:23:06.587242Z",
   "model": "dc-2",
   "probs": [
    0.47,
@@ -740,7 +740,7 @@
   "home": "Chelsea",
   "away": "Crystal Palace",
   "kickoff": "2026-12-02T19:30:00Z",
-  "made_at": "2026-11-24T19:08:41.967934Z",
+  "made_at": "2026-11-24T22:23:06.587242Z",
   "model": "dc-2",
   "probs": [
    0.493,
@@ -768,24 +768,24 @@
     "key": "sot",
     "market": "More shots on target",
     "pick": "Chelsea",
-    "p": 0.735,
-    "p_any": 0.651,
+    "p": 0.736,
+    "p_any": 0.652,
     "tie": 0.114,
     "side": "home",
     "fair": 1.36,
-    "fair_any": 1.54,
+    "fair_any": 1.53,
     "early": false
    },
    {
     "key": "corners",
     "market": "More corners",
     "pick": "Chelsea",
-    "p": 0.858,
-    "p_any": 0.796,
+    "p": 0.859,
+    "p_any": 0.797,
     "tie": 0.072,
     "side": "home",
-    "fair": 1.17,
-    "fair_any": 1.26,
+    "fair": 1.16,
+    "fair_any": 1.25,
     "early": false
    }
   ],
@@ -797,7 +797,7 @@
   "home": "Hull",
   "away": "Nott'm Forest",
   "kickoff": "2026-12-02T19:30:00Z",
-  "made_at": "2026-11-24T19:08:41.967934Z",
+  "made_at": "2026-11-24T22:23:06.587242Z",
   "model": "dc-2",
   "probs": [
    0.276,
@@ -842,7 +842,7 @@
   "home": "Liverpool",
   "away": "Sunderland",
   "kickoff": "2026-12-02T19:30:00Z",
-  "made_at": "2026-11-24T19:08:41.967934Z",
+  "made_at": "2026-11-24T22:23:06.587242Z",
   "model": "dc-2",
   "probs": [
    0.607,
@@ -920,7 +920,7 @@
   "home": "Man City",
   "away": "Leeds",
   "kickoff": "2026-12-02T19:30:00Z",
-  "made_at": "2026-11-24T19:08:41.967934Z",
+  "made_at": "2026-11-24T22:23:06.587242Z",
   "model": "dc-2",
   "probs": [
    0.55,
@@ -989,7 +989,7 @@
   "home": "Aston Villa",
   "away": "Everton",
   "kickoff": "2026-12-02T20:15:00Z",
-  "made_at": "2026-11-24T19:08:41.967934Z",
+  "made_at": "2026-11-24T22:23:06.587242Z",
   "model": "dc-2",
   "probs": [
    0.493,
@@ -1034,15 +1034,15 @@
   "home": "Bournemouth",
   "away": "Brighton",
   "kickoff": "2026-12-02T20:15:00Z",
-  "made_at": "2026-11-24T19:08:41.967934Z",
+  "made_at": "2026-11-24T22:23:06.587242Z",
   "model": "dc-2",
   "probs": [
-   0.439,
+   0.44,
    0.26,
    0.3
   ],
   "model_probs": [
-   0.439,
+   0.44,
    0.26,
    0.3
   ],
@@ -1062,12 +1062,12 @@
     "key": "corners",
     "market": "More corners",
     "pick": "Bournemouth",
-    "p": 0.652,
-    "p_any": 0.58,
+    "p": 0.651,
+    "p_any": 0.579,
     "tie": 0.111,
     "side": "home",
-    "fair": 1.53,
-    "fair_any": 1.72,
+    "fair": 1.54,
+    "fair_any": 1.73,
     "early": false
    }
   ],
@@ -1079,7 +1079,7 @@
   "home": "Brentford",
   "away": "Arsenal",
   "kickoff": "2026-12-02T20:15:00Z",
-  "made_at": "2026-11-24T19:08:41.967934Z",
+  "made_at": "2026-11-24T22:23:06.587242Z",
   "model": "dc-2",
   "probs": [
    0.276,
@@ -1136,17 +1136,17 @@
   "home": "Newcastle",
   "away": "Man United",
   "kickoff": "2026-12-02T20:15:00Z",
-  "made_at": "2026-11-24T19:08:41.967934Z",
+  "made_at": "2026-11-24T22:23:06.587242Z",
   "model": "dc-2",
   "probs": [
-   0.422,
-   0.244,
-   0.334
+   0.418,
+   0.245,
+   0.337
   ],
   "model_probs": [
-   0.422,
-   0.244,
-   0.334
+   0.418,
+   0.245,
+   0.337
   ],
   "blend": false,
   "pick_score": "2-1",
@@ -1157,7 +1157,7 @@
   ],
   "safe": {
    "label": "Newcastle win or draw",
-   "p": 0.666
+   "p": 0.663
   },
   "strong": [],
   "result": null
@@ -1168,15 +1168,15 @@
   "home": "Tottenham",
   "away": "Fulham",
   "kickoff": "2026-12-03T20:00:00Z",
-  "made_at": "2026-11-24T19:08:41.967934Z",
+  "made_at": "2026-11-24T22:23:06.587242Z",
   "model": "dc-2",
   "probs": [
-   0.391,
+   0.392,
    0.294,
    0.315
   ],
   "model_probs": [
-   0.391,
+   0.392,
    0.294,
    0.315
   ],
