@@ -268,7 +268,7 @@
   "home": "Leeds",
   "away": "Coventry",
   "kickoff": "2026-11-28T15:00:00Z",
-  "made_at": "2026-11-27T17:41:46.435127Z",
+  "made_at": "2026-11-27T21:12:58.325139Z",
   "model": "dc-2",
   "probs": [
    0.623,
@@ -334,7 +334,7 @@
   "home": "Man United",
   "away": "Brentford",
   "kickoff": "2026-11-28T15:00:00Z",
-  "made_at": "2026-11-27T17:41:46.435127Z",
+  "made_at": "2026-11-27T21:12:58.325139Z",
   "model": "dc-2",
   "probs": [
    0.446,
@@ -391,7 +391,7 @@
   "home": "Ipswich",
   "away": "Aston Villa",
   "kickoff": "2026-11-28T17:30:00Z",
-  "made_at": "2026-11-27T17:41:46.435127Z",
+  "made_at": "2026-11-27T21:12:58.325139Z",
   "model": "dc-2",
   "probs": [
    0.274,
@@ -423,7 +423,7 @@
   "home": "Everton",
   "away": "Liverpool",
   "kickoff": "2026-11-29T12:00:00Z",
-  "made_at": "2026-11-27T17:41:46.435127Z",
+  "made_at": "2026-11-27T21:12:58.325139Z",
   "model": "dc-2",
   "probs": [
    0.251,
@@ -468,7 +468,7 @@
   "home": "Brighton",
   "away": "Newcastle",
   "kickoff": "2026-11-29T14:05:00Z",
-  "made_at": "2026-11-27T17:41:46.435127Z",
+  "made_at": "2026-11-27T21:12:58.325139Z",
   "model": "dc-2",
   "probs": [
    0.568,
@@ -525,7 +525,7 @@
   "home": "Crystal Palace",
   "away": "Hull",
   "kickoff": "2026-11-29T14:05:00Z",
-  "made_at": "2026-11-27T17:41:46.435127Z",
+  "made_at": "2026-11-27T21:12:58.325139Z",
   "model": "dc-2",
   "probs": [
    0.455,
@@ -570,7 +570,7 @@
   "home": "Fulham",
   "away": "Bournemouth",
   "kickoff": "2026-11-29T14:05:00Z",
-  "made_at": "2026-11-27T17:41:46.435127Z",
+  "made_at": "2026-11-27T21:12:58.325139Z",
   "model": "dc-2",
   "probs": [
    0.339,
@@ -602,7 +602,7 @@
   "home": "Sunderland",
   "away": "Tottenham",
   "kickoff": "2026-11-29T14:05:00Z",
-  "made_at": "2026-11-27T17:41:46.435127Z",
+  "made_at": "2026-11-27T21:12:58.325139Z",
   "model": "dc-2",
   "probs": [
    0.291,
@@ -647,7 +647,7 @@
   "home": "Arsenal",
   "away": "Man City",
   "kickoff": "2026-11-29T16:30:00Z",
-  "made_at": "2026-11-27T17:41:46.435127Z",
+  "made_at": "2026-11-27T21:12:58.325139Z",
   "model": "dc-2",
   "probs": [
    0.452,
@@ -692,7 +692,7 @@
   "home": "Coventry",
   "away": "Ipswich",
   "kickoff": "2026-12-01T20:00:00Z",
-  "made_at": "2026-11-27T17:41:46.435127Z",
+  "made_at": "2026-11-27T21:12:58.325139Z",
   "model": "dc-2",
   "probs": [
    0.432,
@@ -737,7 +737,7 @@
   "home": "Chelsea",
   "away": "Crystal Palace",
   "kickoff": "2026-12-02T19:30:00Z",
-  "made_at": "2026-11-27T17:41:46.435127Z",
+  "made_at": "2026-11-27T21:12:58.325139Z",
   "model": "dc-2",
   "probs": [
    0.498,
@@ -794,7 +794,7 @@
   "home": "Hull",
   "away": "Nott'm Forest",
   "kickoff": "2026-12-02T19:30:00Z",
-  "made_at": "2026-11-27T17:41:46.435127Z",
+  "made_at": "2026-11-27T21:12:58.325139Z",
   "model": "dc-2",
   "probs": [
    0.275,
@@ -839,7 +839,7 @@
   "home": "Liverpool",
   "away": "Sunderland",
   "kickoff": "2026-12-02T19:30:00Z",
-  "made_at": "2026-11-27T17:41:46.435127Z",
+  "made_at": "2026-11-27T21:12:58.325139Z",
   "model": "dc-2",
   "probs": [
    0.603,
@@ -917,7 +917,7 @@
   "home": "Man City",
   "away": "Leeds",
   "kickoff": "2026-12-02T19:30:00Z",
-  "made_at": "2026-11-27T17:41:46.435127Z",
+  "made_at": "2026-11-27T21:12:58.325139Z",
   "model": "dc-2",
   "probs": [
    0.554,
@@ -986,7 +986,7 @@
   "home": "Aston Villa",
   "away": "Everton",
   "kickoff": "2026-12-02T20:15:00Z",
-  "made_at": "2026-11-27T17:41:46.435127Z",
+  "made_at": "2026-11-27T21:12:58.325139Z",
   "model": "dc-2",
   "probs": [
    0.496,
@@ -1031,7 +1031,7 @@
   "home": "Bournemouth",
   "away": "Brighton",
   "kickoff": "2026-12-02T20:15:00Z",
-  "made_at": "2026-11-27T17:41:46.435127Z",
+  "made_at": "2026-11-27T21:12:58.325139Z",
   "model": "dc-2",
   "probs": [
    0.445,
@@ -1076,7 +1076,7 @@
   "home": "Brentford",
   "away": "Arsenal",
   "kickoff": "2026-12-02T20:15:00Z",
-  "made_at": "2026-11-27T17:41:46.435127Z",
+  "made_at": "2026-11-27T21:12:58.325139Z",
   "model": "dc-2",
   "probs": [
    0.272,
@@ -1133,7 +1133,7 @@
   "home": "Newcastle",
   "away": "Man United",
   "kickoff": "2026-12-02T20:15:00Z",
-  "made_at": "2026-11-27T17:41:46.435127Z",
+  "made_at": "2026-11-27T21:12:58.325139Z",
   "model": "dc-2",
   "probs": [
    0.425,
@@ -1165,7 +1165,7 @@
   "home": "Tottenham",
   "away": "Fulham",
   "kickoff": "2026-12-03T20:00:00Z",
-  "made_at": "2026-11-27T17:41:46.435127Z",
+  "made_at": "2026-11-27T21:12:58.325139Z",
   "model": "dc-2",
   "probs": [
    0.388,
